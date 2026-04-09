@@ -11,6 +11,7 @@ const CloseCashierModal = ({ isOpen, onClose, onConfirm, session }) => {
   const [saldoFinal, setSaldoFinal] = useState('');
   const [observacoes, setObservacoes] = useState('');
   const [loadingPayments, setLoadingPayments] = useState(false);
+  const [salesTotal, setSalesTotal] = useState(0);
   const [paymentSummary, setPaymentSummary] = useState({
     dinheiro: 0,
     pix: 0,
@@ -25,7 +26,7 @@ const CloseCashierModal = ({ isOpen, onClose, onConfirm, session }) => {
   });
 
   // Totals are calculated only for the current day (00:00 -> now)
-  const totalVendas = Object.values(paymentSummary).reduce((acc, v) => acc + (Number(v) || 0), 0);
+  const totalVendas = Number(salesTotal || 0);
   const saldoEsperadoDia =
     (Number(session?.saldo_inicial) || 0) +
     totalVendas +
@@ -58,62 +59,33 @@ const CloseCashierModal = ({ isOpen, onClose, onConfirm, session }) => {
 
       const paymentsBase = { dinheiro: 0, pix: 0, debito: 0, credito: 0, fiado: 0, consumo: 0 };
 
-      const [pagamentosRes, vendasRes, movimentosRes] = await Promise.all([
-        supabase
-          .from('venda_pagamentos')
-          .select('id, venda_id, forma_pagamento, valor, data_pagamento')
-          .eq('user_id', user.id)
-          .gte('data_pagamento', startIso)
-          .lte('data_pagamento', endIso),
-        (() => {
-          let vendasQuery = supabase
-            .from('vendas')
-            .select('id, total, forma_pagamento, data_criacao, data_hora, status')
-            .eq('user_id', user.id)
-            .eq('status', 'concluido');
+      const { data: movimentos, error: movError } = await supabase
+        .from('caixa_movimentos')
+        .select('tipo, valor, forma_pagamento, data_movimentacao')
+        .eq('user_id', user.id)
+        .in('tipo', ['venda', 'suprimento', 'retirada'])
+        .gte('data_movimentacao', startIso)
+        .lte('data_movimentacao', endIso);
 
-          vendasQuery = vendasQuery.or(`and(data_criacao.gte.${startIso},data_criacao.lte.${endIso}),and(data_hora.gte.${startIso},data_hora.lte.${endIso})`);
-
-          return vendasQuery;
-        })(),
-        supabase
-          .from('caixa_movimentos')
-          .select('tipo, valor, data_movimentacao')
-          .eq('user_id', user.id)
-          .in('tipo', ['suprimento', 'retirada'])
-          .gte('data_movimentacao', startIso)
-          .lte('data_movimentacao', endIso)
-      ]);
-
-      const pagamentos = pagamentosRes.data || [];
-      const vendas = vendasRes.data || [];
-      const movimentos = movimentosRes.data || [];
-
-      const paidSaleIds = new Set();
-
-      pagamentos.forEach((p) => {
-        if (p?.venda_id) paidSaleIds.add(p.venda_id);
-        const key = normalizeMethod(p?.forma_pagamento);
-        if (!key) return;
-        paymentsBase[key] += Number(p?.valor || 0);
-      });
-
-      vendas.forEach((v) => {
-        if (paidSaleIds.has(v.id)) return;
-        const key = normalizeMethod(v?.forma_pagamento);
-        if (!key) return;
-        paymentsBase[key] += Number(v?.total || 0);
-      });
+      if (movError) throw movError;
 
       const opsBase = { suprimentos: 0, retiradas: 0 };
-      movimentos.forEach((m) => {
+      let vendasTotal = 0;
+      (movimentos || []).forEach((m) => {
         const val = Number(m?.valor || 0);
+        if (m?.tipo === 'venda') {
+          vendasTotal += val;
+          const key = normalizeMethod(m?.forma_pagamento);
+          if (!key) return;
+          paymentsBase[key] += val;
+        }
         if (m?.tipo === 'suprimento') opsBase.suprimentos += val;
         if (m?.tipo === 'retirada') opsBase.retiradas += val;
       });
 
       setPaymentSummary(paymentsBase);
       setOpsSummary(opsBase);
+      setSalesTotal(vendasTotal);
     } catch (err) {
       console.error('Error loading payment summary:', err);
     } finally {
