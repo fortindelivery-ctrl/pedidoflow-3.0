@@ -1,16 +1,6 @@
 {
-  "updatedAt": "2026-04-04T00:05:57.585Z",
+  "updatedAt": "2026-03-27T03:35:46.081Z",
   "itens": [
-    {
-      "id": "849fcc78-446b-434b-8847-2529f234a5a5",
-      "nome": "AÇAI 500 ML",
-      "categoria": "alimentos",
-      "unidade": "UN",
-      "preco": 13,
-      "estoque": 0,
-      "ativo": true,
-      "volumeMl": 500
-    },
     {
       "id": "dc7e0c35-a36c-4657-932b-99e55c171f20",
       "nome": "ÁGUA C/ GÁS",
@@ -35,7 +25,7 @@
       "categoria": "alimentos",
       "unidade": "UN",
       "preco": 0.2,
-      "estoque": 15,
+      "estoque": 20,
       "ativo": true
     },
     {
@@ -72,7 +62,7 @@
       "categoria": "black",
       "unidade": "UN",
       "preco": 2,
-      "estoque": 0,
+      "estoque": 2,
       "ativo": true
     },
     {
@@ -81,7 +71,7 @@
       "categoria": "brahma",
       "unidade": "UN",
       "preco": 5.5,
-      "estoque": 72,
+      "estoque": 126,
       "ativo": true,
       "volumeMl": 473
     },
@@ -109,7 +99,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 5,
-      "estoque": 8,
+      "estoque": 12,
       "ativo": true,
       "pesoKg": 0.02
     },
@@ -122,25 +112,6 @@
       "estoque": 8,
       "ativo": true,
       "volumeMl": 2000
-    },
-    {
-      "id": "59dad63c-6b6e-4ec9-aea8-c2428d6038dc",
-      "nome": "COCA-COLA 200ML",
-      "categoria": "coca-cola",
-      "unidade": "UN",
-      "preco": 3,
-      "estoque": 12,
-      "ativo": true,
-      "volumeMl": 200
-    },
-    {
-      "id": "752fb746-aff3-4fe8-9dad-484787e7c31d",
-      "nome": "COCA-COLA RETORNAVEL",
-      "categoria": "coca-cola",
-      "unidade": "UN",
-      "preco": 8,
-      "estoque": 9,
-      "ativo": true
     },
     {
       "id": "9c446b90-2baf-4e2c-a6fe-0a44b6ab32aa",
@@ -249,7 +220,7 @@
       "categoria": "corona",
       "unidade": "UN",
       "preco": 9,
-      "estoque": 6,
+      "estoque": 7,
       "ativo": true,
       "volumeMl": 330
     },
@@ -277,7 +248,7 @@
       "categoria": "destilado",
       "unidade": "UN",
       "preco": 3,
-      "estoque": 9,
+      "estoque": 10,
       "ativo": true
     },
     {
@@ -296,24 +267,6 @@
       "unidade": "UN",
       "preco": 3.5,
       "estoque": 12,
-      "ativo": true
-    },
-    {
-      "id": "59d5571d-3ee0-4b8e-b153-ee104f0757b9",
-      "nome": "FANTA LARANJA RETORNAVEL",
-      "categoria": "fanta",
-      "unidade": "UN",
-      "preco": 8,
-      "estoque": 9,
-      "ativo": true
-    },
-    {
-      "id": "3b3341ab-0da5-4409-ba88-f756871b1342",
-      "nome": "FANTA UVA RETORNAVEL",
-      "categoria": "fanta",
-      "unidade": "UN",
-      "preco": 8,
-      "estoque": 9,
       "ativo": true
     },
     {
@@ -340,7 +293,7 @@
       "categoria": "gelo",
       "unidade": "UN",
       "preco": 3.48,
-      "estoque": 18,
+      "estoque": 22,
       "ativo": true
     },
     {
@@ -376,7 +329,7 @@
       "categoria": "guarana",
       "unidade": "UN",
       "preco": 11,
-      "estoque": 1,
+      "estoque": 2,
       "ativo": true,
       "volumeMl": 2000
     },
@@ -386,7 +339,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 2.5,
-      "estoque": 3,
+      "estoque": 5,
       "ativo": true,
       "volumeMl": 200
     },
@@ -423,7 +376,7 @@
       "categoria": "heineken",
       "unidade": "UN",
       "preco": 7.5,
-      "estoque": 0,
+      "estoque": 4,
       "ativo": true,
       "volumeMl": 473
     },
@@ -443,7 +396,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 9,
-      "estoque": 6,
+      "estoque": 7,
       "ativo": true,
       "volumeMl": 2000
     },
@@ -453,7 +406,7 @@
       "categoria": "kaiser",
       "unidade": "UN",
       "preco": 4.5,
-      "estoque": 102,
+      "estoque": 58,
       "ativo": true,
       "volumeMl": 473
     },
@@ -491,7 +444,7 @@
       "categoria": "destilado",
       "unidade": "UN",
       "preco": 6.5,
-      "estoque": 164,
+      "estoque": 204,
       "ativo": true,
       "volumeMl": 473
     },
@@ -548,7 +501,7 @@
       "categoria": "porto",
       "unidade": "UN",
       "preco": 2,
-      "estoque": 0,
+      "estoque": 2,
       "ativo": true
     },
     {
@@ -623,7 +576,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 6.99,
-      "estoque": 12,
+      "estoque": 13,
       "ativo": true
     },
     {
@@ -632,7 +585,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 7,
-      "estoque": 3,
+      "estoque": 10,
       "ativo": true,
       "volumeMl": 269
     },
@@ -652,7 +605,7 @@
       "categoria": "skol",
       "unidade": "UN",
       "preco": 5.5,
-      "estoque": 4,
+      "estoque": 7,
       "ativo": true,
       "volumeMl": 473
     },

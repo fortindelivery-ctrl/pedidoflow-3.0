@@ -145,11 +145,6 @@ export const useSalesHistory = () => {
   const deleteSale = async (saleId) => {
     if (!user) return;
     try {
-      const sale = sales.find(s => s.id === saleId);
-      const possibleDescs = [];
-      if (sale?.numero_venda) possibleDescs.push(`Venda #${sale.numero_venda}`);
-      possibleDescs.push(`Venda #${saleId}`);
-
       // Manual cascade delete just in case DB doesn't handle it
       // 1. Delete Items
       await supabase.from('itens_venda').delete().eq('venda_id', saleId);
@@ -157,15 +152,6 @@ export const useSalesHistory = () => {
       await supabase.from('venda_pagamentos').delete().eq('venda_id', saleId);
       // 3. Delete History (if exists)
       await supabase.from('vendas_itens_historico').delete().eq('venda_id', saleId);
-      // 3.1 Delete cash movements tied to the sale
-      if (possibleDescs.length > 0) {
-        await supabase
-          .from('caixa_movimentos')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('tipo', 'venda')
-          .in('descricao', possibleDescs);
-      }
       
       // 4. Delete Sale
       const { error } = await supabase

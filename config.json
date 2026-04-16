@@ -1,10 +1,10 @@
 {
-  "horarioFuncionamento": "",
-  "enderecoLoja": "",
+  "horarioFuncionamento": "Quarta-Feira 10:00 ás 22:00\nQuinta-Feira 10:00 ás 22:00\nSexta-Feira 10:00 ás 00:00\nSábado 10:00 ás 00:00\nDomingo 10:00 ás 18:00",
+  "enderecoLoja": "Rua José Pedro de Brito, 407 - Vila Santa Rita\n\nhttps://maps.app.goo.gl/xoCJSXriSU85gyUVA?g_st=ic",
   "ai": {
-    "enabled": false,
-    "mode": "fallback",
-    "provider": "custom",
+    "enabled": true,
+    "mode": "always",
+    "provider": "openai",
     "endpoint": "",
     "authType": "bearer",
     "headerName": "Authorization",
@@ -12,10 +12,10 @@
     "payloadKey": "message",
     "responsePath": "",
     "apiKey": "",
-    "model": "",
+    "model": "GPT-4.1 Mini",
     "temperature": 0.4,
     "maxTokens": 600,
     "systemPrompt": ""
   },
-  "updatedAt": "2026-03-27T22:57:31.034Z"
+  "updatedAt": "2026-04-16T14:10:24.223Z"
 }

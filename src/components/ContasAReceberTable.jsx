@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MoreVertical, CheckCircle, Edit, Trash2, ArrowUpDown, 
   Calendar, User, DollarSign, AlertCircle, RefreshCw
@@ -16,13 +16,9 @@ const ContasAReceberTable = ({
   loading = false, 
   onMarkAsPaid, 
   onEdit, 
-  onDelete,
-  selectedIds = new Set(),
-  onToggleSelect,
-  onToggleSelectAll
+  onDelete 
 }) => {
   const [sortConfig, setSortConfig] = useState({ key: 'data_vencimento', direction: 'asc' });
-  const selectAllRef = useRef(null);
 
   // Debug logging
   useEffect(() => {
@@ -46,16 +42,6 @@ const ContasAReceberTable = ({
     if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
     return 0;
   });
-
-  const selectableIds = sortedData.filter((item) => item.status !== 'pago').map((item) => item.id);
-  const isAllSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
-  const isSomeSelected = selectableIds.some((id) => selectedIds.has(id));
-
-  useEffect(() => {
-    if (selectAllRef.current) {
-      selectAllRef.current.indeterminate = !isAllSelected && isSomeSelected;
-    }
-  }, [isAllSelected, isSomeSelected]);
 
   if (loading) {
     return (
@@ -81,16 +67,6 @@ const ContasAReceberTable = ({
       <table className="w-full min-w-[720px] text-left border-collapse">
         <thead className="bg-[var(--layout-surface-2)] text-[var(--layout-text-muted)] text-xs uppercase font-bold tracking-wider">
           <tr>
-            <th className="p-4 w-12">
-              <input
-                ref={selectAllRef}
-                type="checkbox"
-                checked={isAllSelected}
-                onChange={(e) => onToggleSelectAll && onToggleSelectAll(selectableIds, e.target.checked)}
-                className="h-4 w-4 rounded border border-[var(--layout-border)] bg-transparent text-[var(--layout-accent)]"
-                aria-label="Selecionar todas"
-              />
-            </th>
             <th className="p-4 cursor-pointer hover:bg-[var(--layout-border)] transition-colors" onClick={() => handleSort('data_vencimento')}>
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" /> Vencimento
@@ -116,20 +92,9 @@ const ContasAReceberTable = ({
         <tbody className="divide-y divide-gray-700">
           {sortedData.map((item) => {
              const isOverdue = item.status !== 'pago' && item.data_vencimento < new Date().toISOString().split('T')[0];
-             const isSelectable = item.status !== 'pago';
              
              return (
               <tr key={item.id} className="hover:bg-[var(--layout-surface-2)] transition-colors group">
-                <td className="p-4">
-                  <input
-                    type="checkbox"
-                    disabled={!isSelectable}
-                    checked={selectedIds.has(item.id)}
-                    onChange={() => onToggleSelect && onToggleSelect(item.id)}
-                    className="h-4 w-4 rounded border border-[var(--layout-border)] bg-transparent text-[var(--layout-accent)] disabled:opacity-40"
-                    aria-label={`Selecionar ${item.cliente?.nome || 'conta'}`}
-                  />
-                </td>
                 <td className="p-4 text-sm font-mono text-[var(--layout-text-muted)]">
                   {new Date(item.data_vencimento).toLocaleDateString('pt-BR')}
                   {item.venda && (

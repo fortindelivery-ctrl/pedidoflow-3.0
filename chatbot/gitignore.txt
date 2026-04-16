@@ -3,8 +3,3 @@ node_modules/
 .wwebjs_cache/
 npm-debug.log*
 *.log
-
-# Runtime data
-bairros.json
-config.json
-package-lock .json

@@ -3,32 +3,21 @@ import { X, CheckCircle, Calendar, CreditCard, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const MarcarComoPagoModal = ({ isOpen, onClose, conta, contas = [], onConfirm }) => {
+const MarcarComoPagoModal = ({ isOpen, onClose, conta, onConfirm }) => {
   const [formData, setFormData] = useState({
     dataPagamento: new Date().toISOString().split('T')[0],
     formaPagamento: 'Dinheiro',
     observacoes: ''
   });
 
-  const list = contas && contas.length > 0 ? contas : (conta ? [conta] : []);
-  const isBulk = list.length > 1;
-  const totalValue = list.reduce((acc, c) => acc + (parseFloat(c.valor) || 0), 0);
-
-  if (!isOpen || list.length === 0) return null;
+  if (!isOpen || !conta) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (isBulk) {
-      onConfirm(list, {
-        ...formData
-      });
-    } else {
-      const single = list[0];
-      onConfirm(single.id, {
-        ...formData,
-        clienteName: single.cliente?.nome
-      });
-    }
+    onConfirm(conta.id, {
+      ...formData,
+      clienteName: conta.cliente?.nome
+    });
     onClose();
   };
 
@@ -53,39 +42,20 @@ const MarcarComoPagoModal = ({ isOpen, onClose, conta, contas = [], onConfirm })
 
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             <div className="bg-[#2a3a4a]/50 p-4 rounded-lg border border-gray-700 space-y-2">
-              {isBulk ? (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">Selecionadas</span>
-                    <span className="text-white font-medium">{list.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">Valor Total</span>
-                    <span className="text-[#00d084] font-bold text-lg">R$ {totalValue.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">Clientes</span>
-                    <span className="text-white font-mono text-sm">Vários</span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">Cliente</span>
-                    <span className="text-white font-medium">{list[0].cliente?.nome || 'Cliente Desconhecido'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">Valor</span>
-                    <span className="text-[#00d084] font-bold text-lg">R$ {parseFloat(list[0].valor).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">Vencimento</span>
-                    <span className="text-white font-mono text-sm">
-                      {new Date(list[0].data_vencimento).toLocaleDateString('pt-BR')}
-                    </span>
-                  </div>
-                </>
-              )}
+              <div className="flex justify-between">
+                <span className="text-gray-400 text-sm">Cliente</span>
+                <span className="text-white font-medium">{conta.cliente?.nome || 'Cliente Desconhecido'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400 text-sm">Valor</span>
+                <span className="text-[#00d084] font-bold text-lg">R$ {parseFloat(conta.valor).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400 text-sm">Vencimento</span>
+                <span className="text-white font-mono text-sm">
+                  {new Date(conta.data_vencimento).toLocaleDateString('pt-BR')}
+                </span>
+              </div>
             </div>
 
             <div>

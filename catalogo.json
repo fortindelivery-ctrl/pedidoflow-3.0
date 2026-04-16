@@ -1,13 +1,23 @@
 {
-  "updatedAt": "2026-03-27T22:57:31.672Z",
+  "updatedAt": "2026-04-16T14:10:28.450Z",
   "itens": [
+    {
+      "id": "849fcc78-446b-434b-8847-2529f234a5a5",
+      "nome": "AÇAI 500 ML",
+      "categoria": "alimentos",
+      "unidade": "UN",
+      "preco": 13,
+      "estoque": 1,
+      "ativo": true,
+      "volumeMl": 500
+    },
     {
       "id": "dc7e0c35-a36c-4657-932b-99e55c171f20",
       "nome": "ÁGUA C/ GÁS",
       "categoria": "nao alcool",
       "unidade": "UN",
       "preco": 3.5,
-      "estoque": 7,
+      "estoque": 5,
       "ativo": true
     },
     {
@@ -16,7 +26,7 @@
       "categoria": "nao alcool",
       "unidade": "UN",
       "preco": 2.99,
-      "estoque": 6,
+      "estoque": 5,
       "ativo": true
     },
     {
@@ -34,7 +44,7 @@
       "categoria": "bala",
       "unidade": "UN",
       "preco": 0.2,
-      "estoque": 55,
+      "estoque": 47,
       "ativo": true
     },
     {
@@ -52,7 +62,7 @@
       "categoria": "black",
       "unidade": "UN",
       "preco": 190,
-      "estoque": 1,
+      "estoque": 0,
       "ativo": true,
       "volumeMl": 1000
     },
@@ -71,7 +81,7 @@
       "categoria": "brahma",
       "unidade": "UN",
       "preco": 5.5,
-      "estoque": 112,
+      "estoque": 41,
       "ativo": true,
       "volumeMl": 473
     },
@@ -81,7 +91,7 @@
       "categoria": "destilado",
       "unidade": "UN",
       "preco": 6,
-      "estoque": 9,
+      "estoque": 7,
       "ativo": true
     },
     {
@@ -90,7 +100,7 @@
       "categoria": "destilado",
       "unidade": "UN",
       "preco": 6,
-      "estoque": 11,
+      "estoque": 3,
       "ativo": true
     },
     {
@@ -99,9 +109,18 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 5,
-      "estoque": 12,
+      "estoque": 8,
       "ativo": true,
       "pesoKg": 0.02
+    },
+    {
+      "id": "c91c13bd-6fa7-445f-a712-1a04aa49e5f4",
+      "nome": "CHOCOLATE DIAMANTE NEGRO ",
+      "categoria": "chocolate",
+      "unidade": "UN",
+      "preco": 5,
+      "estoque": 20,
+      "ativo": true
     },
     {
       "id": "1516af66-f0fc-4b6f-95a2-90837337d09e",
@@ -109,9 +128,28 @@
       "categoria": "coca-cola",
       "unidade": "UN",
       "preco": 13,
-      "estoque": 8,
+      "estoque": 7,
       "ativo": true,
       "volumeMl": 2000
+    },
+    {
+      "id": "59dad63c-6b6e-4ec9-aea8-c2428d6038dc",
+      "nome": "COCA-COLA 200ML",
+      "categoria": "coca-cola",
+      "unidade": "UN",
+      "preco": 3,
+      "estoque": 10,
+      "ativo": true,
+      "volumeMl": 200
+    },
+    {
+      "id": "752fb746-aff3-4fe8-9dad-484787e7c31d",
+      "nome": "COCA-COLA RETORNAVEL",
+      "categoria": "coca-cola",
+      "unidade": "UN",
+      "preco": 8,
+      "estoque": 2,
+      "ativo": true
     },
     {
       "id": "9c446b90-2baf-4e2c-a6fe-0a44b6ab32aa",
@@ -210,7 +248,7 @@
       "categoria": "copo",
       "unidade": "UN",
       "preco": 1,
-      "estoque": 24,
+      "estoque": 20,
       "ativo": true,
       "volumeMl": 700
     },
@@ -220,7 +258,7 @@
       "categoria": "corona",
       "unidade": "UN",
       "preco": 9,
-      "estoque": 7,
+      "estoque": 6,
       "ativo": true,
       "volumeMl": 330
     },
@@ -266,7 +304,25 @@
       "categoria": "esqueiro",
       "unidade": "UN",
       "preco": 3.5,
-      "estoque": 12,
+      "estoque": 11,
+      "ativo": true
+    },
+    {
+      "id": "59d5571d-3ee0-4b8e-b153-ee104f0757b9",
+      "nome": "FANTA LARANJA RETORNAVEL",
+      "categoria": "fanta",
+      "unidade": "UN",
+      "preco": 8,
+      "estoque": 8,
+      "ativo": true
+    },
+    {
+      "id": "3b3341ab-0da5-4409-ba88-f756871b1342",
+      "nome": "FANTA UVA RETORNAVEL",
+      "categoria": "fanta",
+      "unidade": "UN",
+      "preco": 8,
+      "estoque": 9,
       "ativo": true
     },
     {
@@ -275,7 +331,7 @@
       "categoria": "fini",
       "unidade": "UN",
       "preco": 3,
-      "estoque": 7,
+      "estoque": 5,
       "ativo": true
     },
     {
@@ -293,7 +349,7 @@
       "categoria": "gelo",
       "unidade": "UN",
       "preco": 3.48,
-      "estoque": 22,
+      "estoque": 1,
       "ativo": true
     },
     {
@@ -302,7 +358,7 @@
       "categoria": "destilado",
       "unidade": "UN",
       "preco": 30,
-      "estoque": 1,
+      "estoque": 0,
       "ativo": true
     },
     {
@@ -311,7 +367,7 @@
       "categoria": "destilado",
       "unidade": "UN",
       "preco": 30,
-      "estoque": 4,
+      "estoque": 3,
       "ativo": true
     },
     {
@@ -329,7 +385,7 @@
       "categoria": "guarana",
       "unidade": "UN",
       "preco": 11,
-      "estoque": 2,
+      "estoque": 0,
       "ativo": true,
       "volumeMl": 2000
     },
@@ -339,7 +395,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 2.5,
-      "estoque": 5,
+      "estoque": 3,
       "ativo": true,
       "volumeMl": 200
     },
@@ -349,7 +405,16 @@
       "categoria": "gulao",
       "unidade": "UN",
       "preco": 5,
-      "estoque": 2,
+      "estoque": 9,
+      "ativo": true
+    },
+    {
+      "id": "0d02da0f-c47e-49c4-9ca1-3dbfddc4a665",
+      "nome": "GULÃO CHEDAR E BACON",
+      "categoria": "gulao",
+      "unidade": "UN",
+      "preco": 5,
+      "estoque": 9,
       "ativo": true
     },
     {
@@ -386,7 +451,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 160,
-      "estoque": 1,
+      "estoque": 0,
       "ativo": true,
       "volumeMl": 1000
     },
@@ -396,7 +461,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 9,
-      "estoque": 7,
+      "estoque": 1,
       "ativo": true,
       "volumeMl": 2000
     },
@@ -406,7 +471,7 @@
       "categoria": "kaiser",
       "unidade": "UN",
       "preco": 4.5,
-      "estoque": 54,
+      "estoque": 147,
       "ativo": true,
       "volumeMl": 473
     },
@@ -434,7 +499,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 170,
-      "estoque": 1,
+      "estoque": 0,
       "ativo": true,
       "volumeMl": 1000
     },
@@ -444,7 +509,7 @@
       "categoria": "destilado",
       "unidade": "UN",
       "preco": 6.5,
-      "estoque": 200,
+      "estoque": 87,
       "ativo": true,
       "volumeMl": 473
     },
@@ -483,7 +548,7 @@
       "categoria": "pirulito",
       "unidade": "UN",
       "preco": 0.5,
-      "estoque": 31,
+      "estoque": 29,
       "ativo": true
     },
     {
@@ -510,7 +575,7 @@
       "categoria": "red",
       "unidade": "UN",
       "preco": 76.89,
-      "estoque": 2,
+      "estoque": 0,
       "ativo": true,
       "volumeMl": 1000
     },
@@ -566,7 +631,7 @@
       "categoria": "skol",
       "unidade": "UN",
       "preco": 6.5,
-      "estoque": 8,
+      "estoque": 1,
       "ativo": true,
       "volumeMl": 269
     },
@@ -576,7 +641,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 6.99,
-      "estoque": 13,
+      "estoque": 6,
       "ativo": true
     },
     {
@@ -585,7 +650,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 7,
-      "estoque": 10,
+      "estoque": 0,
       "ativo": true,
       "volumeMl": 269
     },
@@ -605,7 +670,7 @@
       "categoria": "skol",
       "unidade": "UN",
       "preco": 5.5,
-      "estoque": 7,
+      "estoque": 4,
       "ativo": true,
       "volumeMl": 473
     },
@@ -615,7 +680,7 @@
       "categoria": "soda",
       "unidade": "UN",
       "preco": 8.5,
-      "estoque": 5,
+      "estoque": 2,
       "ativo": true,
       "volumeMl": 2000
     },
@@ -635,7 +700,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 4.5,
-      "estoque": 6,
+      "estoque": 4,
       "ativo": true,
       "volumeMl": 350
     },
@@ -645,7 +710,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 8,
-      "estoque": 5,
+      "estoque": 4,
       "ativo": true,
       "volumeMl": 2000
     },
@@ -665,7 +730,7 @@
       "categoria": "bebidas",
       "unidade": "UN",
       "preco": 8,
-      "estoque": 3,
+      "estoque": 2,
       "ativo": true,
       "volumeMl": 2000
     },
@@ -690,6 +755,15 @@
       "pesoKg": 0.03
     },
     {
+      "id": "f4ab02ef-e503-4054-88e2-c3884f30c7d4",
+      "nome": "TRENTO BRANCO DARK",
+      "categoria": "trento",
+      "unidade": "UN",
+      "preco": 5,
+      "estoque": 16,
+      "ativo": true
+    },
+    {
       "id": "506184fa-3859-4628-8d99-4303fe04a7df",
       "nome": "TRIDENT MENTA",
       "categoria": "trident",
@@ -704,7 +778,7 @@
       "categoria": "white",
       "unidade": "UN",
       "preco": 95,
-      "estoque": 1,
+      "estoque": 0,
       "ativo": true,
       "volumeMl": 1000
     }

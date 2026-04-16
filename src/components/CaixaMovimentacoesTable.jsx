@@ -3,24 +3,13 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowUpCircle, ArrowDownCircle, MinusCircle, DollarSign, Calendar } from 'lucide-react';
 
-const CaixaMovimentacoesTable = ({ movimentacoes = [], showOperator = false }) => {
+const CaixaMovimentacoesTable = ({ movimentacoes = [] }) => {
   const sortedMovimentacoes = [...movimentacoes].sort((a, b) => 
     new Date(b.data_movimentacao) - new Date(a.data_movimentacao)
   );
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
-  };
-  const getOperatorName = (mov) => {
-    return (
-      mov.funcionario?.nome ||
-      mov.funcionario_nome ||
-      mov.operador ||
-      mov.cashier_name ||
-      mov.usuario_nome ||
-      mov.user_name ||
-      '-'
-    );
   };
 
   if (sortedMovimentacoes.length === 0) {
@@ -43,7 +32,6 @@ const CaixaMovimentacoesTable = ({ movimentacoes = [], showOperator = false }) =
               <th className="px-6 py-4 text-left">Data/Hora</th>
               <th className="px-6 py-4 text-left">Tipo</th>
               <th className="px-6 py-4 text-left">Descrição</th>
-              {showOperator && <th className="px-6 py-4 text-left">Operador</th>}
               <th className="px-6 py-4 text-right">Valor</th>
               <th className="px-6 py-4 text-right">Saldo Anterior</th>
               <th className="px-6 py-4 text-right">Saldo Novo</th>
@@ -106,11 +94,6 @@ const CaixaMovimentacoesTable = ({ movimentacoes = [], showOperator = false }) =
                   <td className="px-6 py-4 text-[var(--layout-text-muted)] max-w-xs truncate" title={mov.descricao}>
                     {mov.descricao || '-'}
                   </td>
-                  {showOperator && (
-                    <td className="px-6 py-4 text-[var(--layout-text-muted)]">
-                      {getOperatorName(mov)}
-                    </td>
-                  )}
                   <td className={`px-6 py-4 text-right font-mono font-bold ${typeConfig.valueColor}`}>
                     {typeConfig.sign} {formatCurrency(mov.valor)}
                   </td>

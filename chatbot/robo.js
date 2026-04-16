@@ -1,5 +1,5 @@
 ﻿// =====================================
-// IMPORTACOES
+// IMPORTA�?�.ES
 // =====================================
 require("dotenv").config();
 const http = require("http");
@@ -20,7 +20,7 @@ const {
   shouldSendAudioReply,
   synthesizeSpeech,
   transcribeAudioMessage,
-} = require("./audio-service.cjs");
+} = require("./audio-service");
 let ultimoQr = null;
 let qrDataUrl = null;
 let qrPngBuffer = null;
@@ -32,19 +32,11 @@ let reinicioEmAndamento = false;
 let inicializandoCliente = false;
 let cacheWwebPreparado = false;
 let aiGeminiBloqueada = false;
-let geminiModeloAtivo = null;
 
 const authDataPath = path.join(__dirname, ".wwebjs_auth");
 const cacheDataPath = path.join(__dirname, ".wwebjs_cache");
 const AUTO_LIMPAR_SESSAO = process.env.WPP_AUTO_CLEAR_SESSION !== "0";
 const AUTO_REINICIAR_EM_FALHA = process.env.WPP_AUTO_RESTART_ON_FAIL !== "0";
-const WWEB_CACHE_TYPE =
-  String(process.env.WWEB_CACHE_TYPE || "none").toLowerCase() === "local"
-    ? "local"
-    : "none";
-const USER_AGENT =
-  process.env.WEB_USER_AGENT ||
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 const WWEB_VERSION = process.env.WWEB_VERSION || DefaultOptions.webVersion;
 
 const escapeHtml = (valor = "") =>
@@ -99,7 +91,6 @@ const mesclarGatilhos = (destino, extras) => {
 };
 
 const limparJson = (texto = "") => String(texto || "").replace(/^\uFEFF/, "");
-const esperar = (ms) => new Promise((res) => setTimeout(res, ms));
 
 const bairrosFilePath = path.join(__dirname, "bairros.json");
 const configFilePath = path.join(__dirname, "config.json");
@@ -297,11 +288,9 @@ const client = new Client({
   authStrategy: new LocalAuth(),
   webVersion: WWEB_VERSION,
   webVersionCache: {
-    type: WWEB_CACHE_TYPE,
-    ...(WWEB_CACHE_TYPE === "local" ? { path: cacheDataPath } : {}),
+    type: "local",
+    path: cacheDataPath,
   },
-  authTimeoutMs: 180000,
-  userAgent: USER_AGENT,
   puppeteer: {
     headless: true,
     executablePath: chromePath || undefined,
@@ -352,7 +341,6 @@ const baixarHtml = (url) =>
   });
 
 const prepararCacheWweb = async () => {
-  if (WWEB_CACHE_TYPE !== "local") return;
   if (cacheWwebPreparado) return;
   cacheWwebPreparado = true;
   try {
@@ -378,7 +366,7 @@ const prepararCacheWweb = async () => {
 // QR CODE
 // =====================================
 client.on("qr", (qr) => {
-  console.log("Escaneie o QR Code:");
+  console.log("�Y"� Escaneie o QR Code:");
   qrcode.generate(qr, { small: false });
 });
 
@@ -386,11 +374,11 @@ client.on("qr", (qr) => {
 // BOT ONLINE
 // =====================================
 client.on("ready", () => {
-  console.log("BOT ONLINE COM SUCESSO");
+  console.log("�o. BOT ONLINE COM SUCESSO");
 });
 
 client.on("authenticated", () => {
-  console.log("WhatsApp autenticado com sucesso");
+  console.log("�Y"� WhatsApp autenticado com sucesso");
 });
 
 client.on("auth_failure", (msg) => {
@@ -399,7 +387,7 @@ client.on("auth_failure", (msg) => {
   ultimoQr = null;
   qrDataUrl = null;
   qrPngBuffer = null;
-  console.log("Falha de autenticacao:", msg);
+  console.log("�O Falha de autenticação:", msg);
 
   if (AUTO_REINICIAR_EM_FALHA) {
     reiniciarCliente(ultimoErroAuth, { limparSessao: AUTO_LIMPAR_SESSAO });
@@ -407,15 +395,10 @@ client.on("auth_failure", (msg) => {
 });
 
 // =====================================
-// DESCONEXAO
+// DESCONEX�fO
 // =====================================
 client.on("disconnected", (reason) => {
-  console.log("WhatsApp desconectado:", reason);
-  if (AUTO_REINICIAR_EM_FALHA) {
-    const motivo = String(reason || "");
-    const limparSessao = AUTO_LIMPAR_SESSAO && motivo.toUpperCase().includes("LOGOUT");
-    reiniciarCliente(motivo, { limparSessao });
-  }
+  console.log("�s�️ WhatsApp desconectado:", reason);
 });
 
 // =====================================
@@ -448,29 +431,14 @@ const atualizarQrImagem = async (qr) => {
   }
 };
 
-const limparDiretorioComRetry = async (dir, tentativas = 5) => {
-  for (let tentativa = 1; tentativa <= tentativas; tentativa += 1) {
-    try {
-      if (fs.existsSync(dir)) {
-        await fs.promises.rm(dir, { recursive: true, force: true });
-      }
-      return true;
-    } catch (erro) {
-      const codigo = erro?.code || "";
-      if (codigo === "ENOTEMPTY" || codigo === "EPERM" || codigo === "EBUSY") {
-        await esperar(300);
-        continue;
-      }
-      throw erro;
-    }
-  }
-  return false;
-};
-
-const limparSessaoLocal = async () => {
+const limparSessaoLocal = () => {
   try {
-    await limparDiretorioComRetry(authDataPath);
-    await limparDiretorioComRetry(cacheDataPath);
+    if (fs.existsSync(authDataPath)) {
+      fs.rmSync(authDataPath, { recursive: true, force: true });
+    }
+    if (fs.existsSync(cacheDataPath)) {
+      fs.rmSync(cacheDataPath, { recursive: true, force: true });
+    }
     console.log("Sessao local removida (.wwebjs_auth/.wwebjs_cache).");
   } catch (erro) {
     console.log("Erro ao limpar sessao local:", erro);
@@ -488,9 +456,7 @@ const iniciarCliente = async () => {
     ultimoErroAuth = mensagem;
     console.log("Erro ao iniciar WhatsApp:", mensagem);
     if (AUTO_REINICIAR_EM_FALHA) {
-      const precisaLimpar =
-        AUTO_LIMPAR_SESSAO && String(mensagem).toLowerCase().includes("auth timeout");
-      reiniciarCliente(mensagem, { limparSessao: precisaLimpar });
+      reiniciarCliente(mensagem, { limparSessao: false });
     }
   } finally {
     inicializandoCliente = false;
@@ -514,7 +480,7 @@ const reiniciarCliente = async (motivo, { limparSessao = false } = {}) => {
   }
 
   if (limparSessao) {
-    await limparSessaoLocal();
+    limparSessaoLocal();
   }
 
   setTimeout(async () => {
@@ -525,45 +491,6 @@ const reiniciarCliente = async (motivo, { limparSessao = false } = {}) => {
     }
   }, 2000);
 };
-
-const extrairMensagemErro = (erro) => {
-  if (erro instanceof Error) return erro.message;
-  if (typeof erro === "string") return erro;
-  try {
-    return JSON.stringify(erro);
-  } catch {
-    return String(erro);
-  }
-};
-
-const logarErroGlobal = (titulo, erro) => {
-  const mensagem = extrairMensagemErro(erro);
-  console.log(`${titulo}:`, mensagem);
-  if (erro instanceof Error && erro.stack) {
-    console.log(erro.stack);
-  }
-};
-
-process.on("unhandledRejection", (reason) => {
-  logarErroGlobal("Promise rejeitada sem tratamento", reason);
-  if (
-    reason?.code === "ENOTEMPTY" &&
-    String(reason?.path || "").includes(".wwebjs_auth")
-  ) {
-    limparSessaoLocal();
-    return;
-  }
-  if (AUTO_REINICIAR_EM_FALHA && !reinicioEmAndamento) {
-    reiniciarCliente(extrairMensagemErro(reason), { limparSessao: false });
-  }
-});
-
-process.on("uncaughtException", (erro) => {
-  logarErroGlobal("Excecao nao tratada", erro);
-  if (AUTO_REINICIAR_EM_FALHA && !reinicioEmAndamento) {
-    reiniciarCliente(extrairMensagemErro(erro), { limparSessao: false });
-  }
-});
 
 client.on("qr", atualizarQrImagem);
 
@@ -671,7 +598,7 @@ const servidor = http.createServer((req, res) => {
 
         atualizarBairros(lista);
         salvarBairros(lista);
-        console.log(`Bairros sincronizados: ${lista.length}`);
+        console.log(`�o. Bairros sincronizados: ${lista.length}`);
 
         res.writeHead(200, {
           ...headersSemCache,
@@ -1036,12 +963,12 @@ const iniciarServidor = (portaInicial) => {
     if (erro.code === "EADDRINUSE") {
       const antiga = portaAtual;
       portaAtual += 1;
-      console.log(`âš ï¸ Porta ${antiga} em uso. Tentando porta ${portaAtual}...`);
+      console.log(`�s�️ Porta ${antiga} em uso. Tentando porta ${portaAtual}...`);
       setTimeout(tentar, 500);
       return;
     }
 
-    console.log("Erro no servidor HTTP:", erro);
+    console.log("�O Erro no servidor HTTP:", erro);
   });
 
   tentar();
@@ -1068,7 +995,7 @@ const limparMensagensProcessadas = () => {
 };
 
 // =====================================
-// LINK DO CARDAPIO
+// LINK DO CARDÁPIO
 // =====================================
 const linkPrincipal = "https://instadelivery.com.br/fortindelivery";
 
@@ -1102,6 +1029,7 @@ const gatilhosAgradecimento = [
   "obgd",
   "obgdo",
   "obgda",
+  "obrigadão",
   "obrigadao",
   "valeu",
   "agradecido",
@@ -1123,11 +1051,13 @@ const gatilhosCordialidade = [
   "opa tudo bem",
 ];
 const gatilhosConfirmacao = ["ok", "okay", "blz", "beleza", "certo", "fechou", "top"];
-const gatilhosDespedida = ["ate mais", "tchau", "falou", "fui", "boa noite", "bom descanso"];
+const gatilhosDespedida = ["ate mais", "até mais", "tchau", "falou", "fui", "boa noite", "bom descanso"];
 const gatilhosPosterior = [
   "vou pedir depois",
+  "depois eu peço",
   "depois eu faco",
   "mais tarde eu peco",
+  "mais tarde eu peço",
   "vou ver depois",
 ];
 const gatilhosCardapio = [
@@ -1161,15 +1091,7 @@ const gatilhosConsultoria = [
   "montar pedido",
 ];
 const gatilhosOrcamento = ["orcamento", "preco", "valor", "custa", "quanto fica"];
-const gatilhosEndereco = [
-  "endereco",
-  "onde fica",
-  "localizacao",
-  "qual endereco",
-  "qual endereço",
-  "endereco da loja",
-  "endereço da loja",
-];
+const gatilhosEndereco = [];
 const gatilhosSaudacao = [];
 const gatilhosTaxa = [];
 const gatilhosHorario = [];
@@ -1365,6 +1287,17 @@ const adicionarGatilhosExpandidos = () => {
     "horario de funcionamento",
     "horário de funcionamento",
   ];
+  const enderecoBase = [
+    "endereco",
+    "endere�o",
+    "onde fica",
+    "localizacao",
+    "localiza��o",
+    "qual endereco",
+    "qual endere�o",
+    "endereco da loja",
+    "endere�o da loja",
+  ];
   const pagamentoBase = [
     "pix",
     "cartao",
@@ -1416,6 +1349,7 @@ const adicionarGatilhosExpandidos = () => {
   mesclarGatilhos(gatilhosOrcamento, ["preco", "preço", "valor", "custa", "quanto fica", "quanto sai"]);
   mesclarGatilhos(gatilhosTaxa, taxaBase);
   mesclarGatilhos(gatilhosHorario, horarioBase);
+  mesclarGatilhos(gatilhosEndereco, enderecoBase);
   mesclarGatilhos(gatilhosPagamento, pagamentoBase);
   mesclarGatilhos(gatilhosTempoEntrega, tempoEntregaBase);
   mesclarGatilhos(gatilhosAtendente, atendenteBase);
@@ -1443,11 +1377,11 @@ const extrairNumeros = (texto = "") => {
 
 const corrigirTextoPossivelmenteMalCodificado = (texto = "") => {
   if (typeof texto !== "string") return "";
-  const suspeito = /Ã|Â|�/.test(texto);
+  const suspeito = /�|�|?/.test(texto);
   if (!suspeito) return texto;
   try {
     const corrigido = Buffer.from(texto, "latin1").toString("utf8");
-    if (corrigido.includes("�")) return texto;
+    if (corrigido.includes("?")) return texto;
     return corrigido;
   } catch {
     return texto;
@@ -1474,19 +1408,6 @@ const stopwordsCatalogo = new Set([
   "voces",
   "voce",
   "vc",
-  "me",
-  "quero",
-  "queria",
-  "gostaria",
-  "preciso",
-  "manda",
-  "manda ai",
-  "me ve",
-  "me vê",
-  "separa",
-  "separe",
-  "quero uma",
-  "quero um",
   "o",
   "a",
   "os",
@@ -1532,110 +1453,45 @@ const buscaCatalogoPorTokens = (tokens = []) => {
   });
 };
 
-const aliasesCatalogo = {
-  cerveja: [
-    "cerveja",
-    "brahma",
-    "skol",
-    "heineken",
-    "original",
-    "bohemia",
-    "budweiser",
-    "antarctica",
-    "amstel",
-    "itaipava",
-    "spaten",
-    "corona",
-    "stella",
-    "devassa",
-    "eisenbahn",
-    "becks",
-    "pilsen",
-    "lager",
-  ],
-  refrigerante: ["refrigerante", "coca", "coca-cola", "guarana", "fanta", "sprite", "pepsi"],
-  agua: ["agua", "água"],
-  destilado: [
-    "destilado",
-    "whisky",
-    "vodka",
-    "gin",
-    "cachaca",
-    "cachaça",
-    "rum",
-    "tequila",
-    "licor",
-    "conhaque",
-  ],
-  energetico: ["energetico", "energético", "red bull", "monster"],
-  gelo: ["gelo"],
-  carvao: ["carvao", "carvão"],
-  suco: ["suco"],
-};
-
-const buscarCatalogoPorAlias = (textoNormalizado = "") => {
-  if (!textoNormalizado) return { itens: [], aliasUsado: null };
-  const texto = String(textoNormalizado);
-  const aliasEncontrado = Object.entries(aliasesCatalogo).find(([, termos]) =>
-    termos.some((termo) => texto.includes(normalizarParaBusca(termo)))
-  );
-  if (!aliasEncontrado) return { itens: [], aliasUsado: null };
-  const [, termos] = aliasEncontrado;
-  const itens = catalogoData.list.filter((item) => {
-    if (!item || item.ativo === false) return false;
-    const nome = normalizarParaBusca(item.nome || "");
-    const categoria = normalizarParaBusca(item.categoria || item.tipo || "");
-    return termos.some((termo) => {
-      const alvo = normalizarParaBusca(termo);
-      return (alvo && (nome.includes(alvo) || categoria.includes(alvo)));
-    });
-  });
-  return { itens, aliasUsado: aliasEncontrado[0] };
-};
-
-const formatarNomeItem = (item) =>
-  corrigirTextoPossivelmenteMalCodificado(item?.nome || "").trim() || "Item";
-
-const formatarPrecoItem = (item) => {
-  const preco = Number(item?.preco);
-  return Number.isFinite(preco) && preco > 0 ? `R$ ${formatarPreco(preco)}` : null;
-};
-
-const montarListaOpcoesCatalogo = (itens = []) =>
-  itens.slice(0, 5).map((item, index) => {
-    const nome = formatarNomeItem(item);
-    const preco = formatarPrecoItem(item);
-    const estoque = Number(item?.estoque);
-    const disponibilidade = Number.isFinite(estoque)
-      ? estoque > 0
-        ? "disponível"
-        : "indisponível"
-      : "disponibilidade não informada";
-    return `${index + 1}) ${nome}${preco ? ` (${preco})` : ""} - ${disponibilidade}`;
-  });
-
 const montarRespostaDisponibilidade = (itens, tokensBusca) => {
   if (!Array.isArray(itens) || !itens.length) {
     if (!tokensBusca.length) return null;
-    return "Não encontrei esse item no catálogo. Pode me dizer o nome exato?";
+    return "Nao encontrei esse item no catalogo. Pode me dizer o nome exato?";
   }
+
+  const nomeFormatado = (item) => corrigirTextoPossivelmenteMalCodificado(item?.nome || "");
+  const precoFormatado = (item) => {
+    const preco = Number(item?.preco);
+    return Number.isFinite(preco) && preco > 0 ? `R$ ${formatarPreco(preco)}` : null;
+  };
 
   if (itens.length === 1) {
     const item = itens[0];
     const estoque = Number(item?.estoque);
-    const nome = formatarNomeItem(item);
-    const preco = formatarPrecoItem(item);
+    const nome = nomeFormatado(item) || "Item";
+    const preco = precoFormatado(item);
     if (Number.isFinite(estoque)) {
       if (estoque > 0) {
-        return `Sim, temos ${nome}${preco ? `. Preço: ${preco}` : ""}.`;
+        return `Sim, temos ${nome}${preco ? `. Preco: ${preco}` : ""}.`;
       }
-      return `No momento não temos ${nome}.`;
+      return `No momento nao temos ${nome}.`;
     }
-    return `Temos ${nome}${preco ? ` (preço ${preco})` : ""}.`;
+    return `Temos ${nome}${preco ? ` (preco ${preco})` : ""}.`;
   }
 
-  const linhas = montarListaOpcoesCatalogo(itens);
-  return `Encontrei mais de um item com esse nome:\n${linhas.join("\n")}\nQual deles você quer?`;
+  const linhas = itens.slice(0, 5).map((item) => {
+    const nome = nomeFormatado(item) || "Item";
+    const estoque = Number(item?.estoque);
+    const preco = precoFormatado(item);
+    const disponibilidade = Number.isFinite(estoque)
+      ? estoque > 0
+        ? "disponivel"
+        : "indisponivel"
+      : "disponibilidade nao informada";
+    return `- ${nome}${preco ? ` (${preco})` : ""} - ${disponibilidade}`;
+  });
+
+  return `Encontrei mais de um item com esse nome:\n${linhas.join("\n")}\nQual deles voce quer?`;
 };
 
 const respostaCatalogoSeAplicavel = (textoOriginal = "") => {
@@ -1644,63 +1500,11 @@ const respostaCatalogoSeAplicavel = (textoOriginal = "") => {
   const pareceConsulta =
     /\b(tem|disponivel|disponibilidade|estoque|vende|vendem)\b/.test(textoNormalizado) ||
     /\b(voces vendem|voce vende|vc vende)\b/.test(textoNormalizado);
-  const parecePedido =
-    /\b(quero|queria|gostaria|preciso|manda|manda ai|me ve|me vê|separa|separe|vou querer)\b/.test(
-      textoNormalizado
-    );
+  if (!pareceConsulta) return null;
   const tokens = extrairTokensCatalogo(textoOriginal);
-  let itens = [];
-  if (tokens.length) {
-    itens = buscaCatalogoPorTokens(tokens);
-  }
-  let aliasUsado = null;
-  if (!itens.length) {
-    const resultadoAlias = buscarCatalogoPorAlias(textoNormalizado);
-    itens = resultadoAlias.itens;
-    aliasUsado = resultadoAlias.aliasUsado;
-  }
-  if (!pareceConsulta && !parecePedido && !aliasUsado) return null;
-
-  const itensAtivos = itens.filter((item) => item && item.ativo !== false);
-  const itensDisponiveis = itensAtivos.filter((item) => {
-    const estoque = Number(item?.estoque);
-    return !Number.isFinite(estoque) || estoque > 0;
-  });
-  const itensParaResposta = itensDisponiveis.length ? itensDisponiveis : itensAtivos;
-
-  if (parecePedido || aliasUsado) {
-    if (!itensParaResposta.length) {
-      return {
-        texto: "Qual marca ou tamanho você prefere? Posso listar as opções disponíveis.",
-        etapa: "menu",
-      };
-    }
-
-    if (itensParaResposta.length === 1) {
-      const item = itensParaResposta[0];
-      const nome = formatarNomeItem(item);
-      const preco = formatarPrecoItem(item);
-      const estoque = Number(item?.estoque);
-      if (Number.isFinite(estoque) && estoque <= 0) {
-        return { texto: `No momento não temos ${nome}.`, etapa: "menu" };
-      }
-      return {
-        texto: `Perfeito! Temos ${nome}${preco ? ` (${preco})` : ""}. Quantas unidades você quer?`,
-        etapa: "pedido_quantidade",
-        item,
-      };
-    }
-
-    return {
-      texto: `Tenho essas opções disponíveis:\n${montarListaOpcoesCatalogo(
-        itensParaResposta
-      ).join("\n")}\nMe diga o número da opção e a quantidade.`,
-      etapa: "pedido_escolha",
-      itens: itensParaResposta.slice(0, 5),
-    };
-  }
-
-  return { texto: montarRespostaDisponibilidade(itensParaResposta, tokens), etapa: "menu" };
+  if (!tokens.length) return null;
+  const itens = buscaCatalogoPorTokens(tokens);
+  return montarRespostaDisponibilidade(itens, tokens);
 };
 
 const classificarPerfilCompra = (textoNormalizado = "") => {
@@ -1791,7 +1595,7 @@ const montarEstimativaCatalogo = (sugestao) => {
       avisos.push(`Estoque baixo de ${nome} (disponivel ${estoque}).`);
     }
 
-    const precoStr = possuiPreco ? `R$ ${formatarPreco(preco)}` : "preço não informado";
+    const precoStr = possuiPreco ? `R$ ${formatarPreco(preco)}` : "preco nao informado";
     const subtotalStr = possuiPreco ? `R$ ${formatarPreco(subtotal)}` : "total sob consulta";
     linhas.push(`- ${nome}: ${quantidade} x ${precoStr} = ${subtotalStr}`);
   };
@@ -1809,14 +1613,14 @@ const montarEstimativaCatalogo = (sugestao) => {
   if (sugestao.naoAlcoolLitros > 0) {
     const item = selecionarItemCatalogo("nao alcool");
     if (!item) {
-      avisos.push("Sem item de não álcool no catálogo.");
+      avisos.push("Sem item de nao alcool no catalogo.");
     } else {
       const volumeMl = Number(item.volumeMl) || 2000;
       const unidades = Math.max(
         1,
         Math.ceil((sugestao.naoAlcoolLitros * 1000) / volumeMl)
       );
-      adicionarItem(item, unidades, "não álcool");
+      adicionarItem(item, unidades, "nao alcool");
     }
   }
 
@@ -1895,7 +1699,7 @@ const montarResumoConsultoria = ({ pessoas, duracao, perfil }) => {
       `- Destilados: ~${sugestao.destiladosGarrafas} garrafas (1L) para o mix`
     );
   }
-  linhas.push(`- Sem álcool: ~${sugestao.naoAlcoolLitros} L de água/refri`);
+  linhas.push(`- Sem alcool: ~${sugestao.naoAlcoolLitros} L de agua/refri`);
   linhas.push(`- Gelo: ~${sugestao.geloSacos} sacos de 2kg`);
   linhas.push("");
   const estimativa = montarEstimativaCatalogo(sugestao);
@@ -2035,74 +1839,78 @@ const obterSaudacaoPorTexto = (textoBusca = "") => {
 const montarMenuPrincipal = () => `${obterSaudacao()}!
 
 Oi! Sou o assistente comercial da Fortin Delivery.
-Posso orientar seu pedido.
+Posso orientar seu pedido e sugerir quantidades.
 
-Cardápio e pedido rápido:
+Cardapio e pedido rapido:
 ${linkPrincipal}
 
-Escolha uma opção:
+Escolha uma opcao:
 1) Taxa de entrega
 2) Bairros atendidos
-3) Horário de funcionamento
-4) Endereço
+3) Horario de funcionamento
+4) Endereco
 5) Falar com atendente`;
 
-const mensagemCompraDireta = `Trabalhamos com bebidas e complementos (gelo, carvão, refrigerante, energético).
+const mensagemCompraDireta = `Trabalhamos com bebidas e complementos (gelo, carvao, refrigerante, energetico).
 
-Cardápio:
+Cardapio:
 ${linkPrincipal}
+
+Se quiser consultoria de quantidades, responda com:
+"10 pessoas, 4 horas, misto"
 
 Ou escolha:
 1) Taxa de entrega
 2) Bairros atendidos
-3) Horário de funcionamento
-4) Endereço
+3) Horario de funcionamento
+4) Endereco
 5) Falar com atendente`;
 
-const mensagemAtendente = `Certo! Vou pausar o robô por 10 minutos para você conversar com o atendente.
+const mensagemAtendente = `�o. Certo! Vou pausar o robô por 10 minutos para você conversar com o atendente.
 
 Depois desse período eu volto a responder por aqui.`;
-const mensagemStopConversa = "Robô pausado somente nesta conversa. Para reativar, envie /start.";
-const mensagemStartConversa = "Robô reativado nesta conversa. Pode continuar.";
-const mensagemAudioNaoEntendido = "Recebi seu áudio, mas não consegui entender. Pode enviar novamente ou escrever por texto.";
-const mensagemAgradecimento = `Que bom falar com você! Muito obrigado pelo carinho.
+const mensagemAudioNaoEntendido = "Recebi seu audio, mas nao consegui entender. Pode enviar novamente ou escrever por texto.";
+const mensagemAgradecimento = `�Y~S Que bom falar com você! Muito obrigado pelo carinho.
 
 Sempre que quiser, estou por aqui para ajudar.
 
 Seu cardápio está aqui:
-${linkPrincipal}
+�Y'? ${linkPrincipal}
 
 Se precisar, digite *menu* para ver as opções.`;
 
-const mensagemConfirmacao = `Perfeito!
+const mensagemConfirmacao = `Perfeito! �Y'�
 
 Se quiser seguir com seu pedido, é só acessar:
-${linkPrincipal}
+�Y'? ${linkPrincipal}
 
 Se precisar de ajuda, digite *menu*.`;
 
-const mensagemDespedida = `Combinado! Estaremos por aqui.
+const mensagemDespedida = `�Y~S Combinado! Estaremos por aqui.
 
 Quando quiser pedir sua bebida:
-${linkPrincipal}
+�Y'? ${linkPrincipal}
 
 Até mais!`;
 
 const mensagemCordialidade = `Tudo certo por aqui!
 
-Se quiser, posso te ajudar com seu pedido de bebidas, taxa de entrega, horário ou endereço.
+Se quiser, posso te ajudar com seu pedido de bebidas, taxa de entrega, horario ou endereco.
 
-Digite *menu* para ver as opções.`;
+Digite *menu* para ver as opcoes.`;
 const montarMensagemSaudacao = (saudacao = obterSaudacao()) => `${saudacao}!
 
 Posso te ajudar com seu pedido.
-Se quiser ver o cardápio, digite *menu*.`;
-const mensagemPagamento = "Qual forma de pagamento você prefere? Posso confirmar se é Pix, cartão ou dinheiro.";
-const mensagemTempoEntrega = "O tempo de entrega varia por bairro e horário. Me diga seu bairro que eu confirmo.";
+Se quiser ver o cardapio, digite *menu*.`;
+const mensagemPagamento = "Qual forma de pagamento voce prefere? Posso confirmar se e Pix, cartao ou dinheiro.";
+const mensagemTempoEntrega = "O tempo de entrega varia por bairro e horario. Me diga seu bairro que eu confirmo.";
 const mensagemCardapio = `Claro!
 
-Cardápio:
-${linkPrincipal}`;
+Cardapio:
+${linkPrincipal}
+
+Se quiser, posso sugerir quantidades. Exemplo:
+"12 pessoas, 4 horas, misto"`;
 const mensagemConsultoriaInicio = `Posso te ajudar com quantidades e mix.
 
 Responda com algo assim:
@@ -2119,7 +1927,7 @@ const mensagemOrcamento = "Me diga um orcamento aproximado e as bebidas preferid
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
 // =====================================
-// IA - UTILITARIOS
+// IA - UTILITÁRIOS
 // =====================================
 const obterValorPorCaminho = (obj, caminho) => {
   if (!caminho || typeof caminho !== "string") return null;
@@ -2161,14 +1969,12 @@ const buildSystemPrompt = () => {
   const base = [
     "Você é o assistente virtual da Fortin Delivery.",
     "Responda em português, de forma objetiva e simpática.",
-    "Use somente as informações do contexto fornecido.",
+    "Use somente as informacoes do contexto fornecido.",
     "Use bairros e taxas de entrega do contexto para informar valores corretos.",
-    "Use o catálogo do contexto para responder sobre produtos e preços.",
-    "Quando perguntarem se tem um item, responda se existe no catálogo e se está disponível, sem informar quantidade em estoque.",
-    "Se o estoque for 0, diga que está indisponível no momento.",
-    "Use o horário de funcionamento configurado quando perguntarem.",
-    "Se perguntarem taxa por bairro, use o mapa taxasEntrega; se a taxa for 0, responda que a entrega é grátis.",
-    "Se perguntarem taxa por bairro e não encontrar, diga que não atendemos.",
+    "Use o catalogo do contexto para responder sobre produtos e precos.",
+    "Quando perguntarem se tem um item, responda se existe no catalogo e informe o estoque (se for 0, diga que esta sem estoque).",
+    "Use o horario de funcionamento configurado quando perguntarem.",
+    "Se perguntarem taxa por bairro, use o mapa taxasEntrega; se nao encontrar, diga que nao atendemos.",
     "Se não souber algo, peça mais detalhes ao cliente.",
     "Quando a pessoa pedir para comprar, envie o link do cardápio.",
   ].join(" ");
@@ -2245,62 +2051,32 @@ const gerarRespostaGemini = async (mensagem, contexto) => {
   if (aiGeminiBloqueada) return null;
   const apiKey = configData.ai.apiKey || process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
-  const prompt = `${buildSystemPrompt()}\nContexto: ${JSON.stringify(contexto)}\nMensagem: ${mensagem}`;
-  const modeloPreferido = String(
-    geminiModeloAtivo || configData.ai.model || process.env.GEMINI_MODEL || "gemini-1.5-flash"
+  const modelName = String(
+    configData.ai.model || process.env.GEMINI_MODEL || "gemini-2.5-flash"
   ).trim();
-  const modelosCandidatos = [
-    modeloPreferido,
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro-latest",
-    "gemini-1.0-pro",
-    "gemini-2.0-flash",
-  ].filter(Boolean);
-  const modelosUnicos = [...new Set(modelosCandidatos)];
   const genAI = new GoogleGenerativeAI(apiKey);
-  let erroModelo = null;
-
-  for (const modelName of modelosUnicos) {
-    try {
-      const model = genAI.getGenerativeModel({ model: modelName });
-      const result = await model.generateContent(prompt);
-      const text = result?.response?.text();
-      if (text && text.trim()) {
-        geminiModeloAtivo = modelName;
-        return text.trim();
-      }
-    } catch (erro) {
-      const mensagemErro = String(erro?.message || erro);
-      const quota =
-        mensagemErro.includes("429") ||
-        mensagemErro.toLowerCase().includes("quota") ||
-        mensagemErro.toLowerCase().includes("exceeded");
-      if (quota) {
-        console.log(
-          "IA Gemini: limite de uso atingido (quota). Tente novamente mais tarde ou ative o billing."
-        );
-        return null;
-      }
-      const invalido =
-        mensagemErro.includes("not found") ||
-        mensagemErro.includes("not supported") ||
-        mensagemErro.includes("models/");
-      if (invalido) {
-        erroModelo = mensagemErro;
-        continue;
-      }
-      console.log("IA Gemini: falha ao gerar resposta:", mensagemErro);
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+  });
+  const prompt = `${buildSystemPrompt()}\nContexto: ${JSON.stringify(contexto)}\nMensagem: ${mensagem}`;
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result?.response?.text();
+    return text ? text.trim() : null;
+  } catch (erro) {
+    const mensagemErro = String(erro?.message || erro);
+    if (
+      mensagemErro.includes("not found") ||
+      mensagemErro.includes("not supported") ||
+      mensagemErro.includes("models/")
+    ) {
+      console.log("IA Gemini desativada: modelo invalido. Ajuste ai.model no config.json.");
+      aiGeminiBloqueada = true;
       return null;
     }
+    console.log("IA Gemini: falha ao gerar resposta:", mensagemErro);
+    return null;
   }
-
-  if (erroModelo) {
-    console.log(
-      "IA Gemini: nenhum modelo valido encontrado. Ajuste ai.model no config.json."
-    );
-  }
-  return null;
 };
 
 const gerarRespostaIA = async (mensagem) => {
@@ -2321,70 +2097,6 @@ const gerarRespostaIA = async (mensagem) => {
   }
 };
 
-const obterIdConversa = (msg) => {
-  if (!msg) return null;
-  const enviadaPeloBot = Boolean(msg.fromMe || msg.id?.fromMe);
-  if (enviadaPeloBot && msg.to) return msg.to;
-  return msg.from || null;
-};
-
-const extrairComandosConversa = (texto = "") => {
-  const textoOriginal = String(texto || "").trim().toLowerCase();
-  const textoComando = normalizarParaBusca(textoOriginal);
-  const comandoStop =
-    textoOriginal === "/stop" ||
-    textoOriginal.startsWith("/stop ") ||
-    textoComando === "stop" ||
-    textoComando.startsWith("stop ");
-  const comandoStart =
-    textoOriginal === "/start" ||
-    textoOriginal.startsWith("/start ") ||
-    textoComando === "start" ||
-    textoComando.startsWith("start ");
-
-  return { comandoStop, comandoStart };
-};
-
-const aplicarComandoControleConversa = async (msg) => {
-  const conversaId = obterIdConversa(msg);
-  if (!conversaId) return false;
-  if (conversaId === "status@broadcast") return false;
-  if (conversaId.endsWith("@g.us")) return false;
-
-  const { comandoStop, comandoStart } = extrairComandosConversa(msg.body || "");
-  if (!comandoStop && !comandoStart) return false;
-
-  if (!sessions.has(conversaId)) {
-    sessions.set(conversaId, { etapa: "menu" });
-  }
-  const session = sessions.get(conversaId);
-
-  if (comandoStop) {
-    session.pausadoManual = true;
-    delete session.pausadoAte;
-    session.etapa = "menu";
-    await client.sendMessage(conversaId, mensagemStopConversa);
-    console.log("Comando /stop aplicado na conversa:", conversaId);
-    return true;
-  }
-
-  session.etapa = "menu";
-  delete session.pausadoManual;
-  delete session.pausadoAte;
-  await client.sendMessage(conversaId, mensagemStartConversa);
-  console.log("Comando /start aplicado na conversa:", conversaId);
-  return true;
-};
-
-client.on("message_create", async (msg) => {
-  try {
-    if (!(msg.fromMe || msg.id?.fromMe)) return;
-    await aplicarComandoControleConversa(msg);
-  } catch (erro) {
-    console.log("ERRO ao processar comando da conversa:", erro);
-  }
-});
-
 // =====================================
 // RECEBER MENSAGENS
 // =====================================
@@ -2404,7 +2116,16 @@ client.on("message", async (msg) => {
     // BLOQUEIA GRUPOS
     if (msg.from.endsWith("@g.us")) return;
 
-    if (await aplicarComandoControleConversa(msg)) return;
+    const textoStop = normalizarParaBusca(msg.body || "");
+    if (textoStop === "stop" || textoStop.startsWith("stop ")) {
+      if (!sessions.has(msg.from)) {
+        sessions.set(msg.from, { etapa: "menu" });
+      }
+      const sessionStop = sessions.get(msg.from);
+      sessionStop.pausadoAte = Date.now() + TEMPO_PAUSA_ATENDENTE_MS;
+      sessionStop.etapa = "menu";
+      return;
+    }
 
     // BLOQUEIA MENSAGENS DO BOT
     if (msg.fromMe || msg.id?.fromMe) return;
@@ -2478,7 +2199,6 @@ client.on("message", async (msg) => {
       if (Date.now() < session.pausadoAte) return;
       delete session.pausadoAte;
     }
-    if (session.pausadoManual) return;
 
 
     const textoBusca = normalizarParaBusca(textoOriginal);
@@ -2492,133 +2212,10 @@ client.on("message", async (msg) => {
       return;
     }
 
-    if (session.etapa === "pedido_escolha") {
-      if (gatilhosMenu.test(textoBusca)) {
-        await typing();
-        await client.sendMessage(msg.from, montarMenuPrincipal());
-        session.etapa = "menu";
-        session.pedidoOpcoes = null;
-        return;
-      }
-
-      const opcoes = Array.isArray(session.pedidoOpcoes) ? session.pedidoOpcoes : [];
-      const numeros = extrairNumeros(textoOriginal);
-      let itemSelecionado = null;
-      let quantidade = null;
-
-      if (numeros.length) {
-        const indice = numeros[0];
-        if (indice >= 1 && indice <= opcoes.length) {
-          itemSelecionado = opcoes[indice - 1];
-          if (numeros.length > 1) {
-            quantidade = numeros[1];
-          }
-        }
-      }
-
-      if (!itemSelecionado && opcoes.length) {
-        const textoBusca = normalizarParaBusca(textoOriginal);
-        itemSelecionado = opcoes.find((item) => {
-          const nome = normalizarParaBusca(item?.nome || "");
-          return nome && textoBusca.includes(nome);
-        });
-      }
-
-      if (!itemSelecionado) {
-        await typing();
-        await client.sendMessage(msg.from, "Não consegui identificar a opção. Me diga o número ou o nome.");
-        return;
-      }
-
-      if (!quantidade || quantidade <= 0) {
-        session.pedidoItem = itemSelecionado;
-        session.etapa = "pedido_quantidade";
-        await typing();
-        await client.sendMessage(
-          msg.from,
-          `Quantas unidades de ${formatarNomeItem(itemSelecionado)} você quer?`
-        );
-        return;
-      }
-
-      const nome = formatarNomeItem(itemSelecionado);
-      const preco = formatarPrecoItem(itemSelecionado);
-      const subtotal = preco
-        ? Number(itemSelecionado.preco) * quantidade
-        : null;
-      await typing();
-      await client.sendMessage(
-        msg.from,
-        `Perfeito! Anotei: ${quantidade}x ${nome}${preco ? ` (${preco})` : ""}.${
-          subtotal ? ` Total estimado: R$ ${formatarPreco(subtotal)}.` : ""
-        }\n\nPara finalizar o pedido, acesse:\n${linkPrincipal}\n\nQuer adicionar mais algum item?`
-      );
-      session.etapa = "menu";
-      session.pedidoOpcoes = null;
-      session.pedidoItem = null;
-      return;
-    }
-
-    if (session.etapa === "pedido_quantidade") {
-      if (gatilhosMenu.test(textoBusca)) {
-        await typing();
-        await client.sendMessage(msg.from, montarMenuPrincipal());
-        session.etapa = "menu";
-        session.pedidoItem = null;
-        return;
-      }
-
-      const numeros = extrairNumeros(textoOriginal);
-      const quantidade = numeros[0];
-      if (!quantidade || quantidade <= 0) {
-        await typing();
-        await client.sendMessage(msg.from, "Me diga a quantidade desejada, por favor.");
-        return;
-      }
-
-      const itemSelecionado = session.pedidoItem;
-      if (!itemSelecionado) {
-        session.etapa = "menu";
-        return;
-      }
-
-      const nome = formatarNomeItem(itemSelecionado);
-      const preco = formatarPrecoItem(itemSelecionado);
-      const subtotal = preco
-        ? Number(itemSelecionado.preco) * quantidade
-        : null;
-      await typing();
-      await client.sendMessage(
-        msg.from,
-        `Perfeito! Anotei: ${quantidade}x ${nome}${preco ? ` (${preco})` : ""}.${
-          subtotal ? ` Total estimado: R$ ${formatarPreco(subtotal)}.` : ""
-        }\n\nPara finalizar o pedido, acesse:\n${linkPrincipal}\n\nQuer adicionar mais algum item?`
-      );
-      session.etapa = "menu";
-      session.pedidoItem = null;
-      return;
-    }
-
     const respostaCatalogo = respostaCatalogoSeAplicavel(textoOriginal);
     if (respostaCatalogo) {
-      const textoResposta =
-        typeof respostaCatalogo === "string" ? respostaCatalogo : respostaCatalogo.texto;
-      await responderComTexto(textoResposta);
-      if (respostaCatalogo && typeof respostaCatalogo === "object") {
-        session.etapa = respostaCatalogo.etapa || "menu";
-        if (respostaCatalogo.itens) {
-          session.pedidoOpcoes = respostaCatalogo.itens;
-        } else if (respostaCatalogo.item) {
-          session.pedidoItem = respostaCatalogo.item;
-        } else {
-          session.pedidoOpcoes = null;
-          session.pedidoItem = null;
-        }
-      } else {
-        session.etapa = "menu";
-        session.pedidoOpcoes = null;
-        session.pedidoItem = null;
-      }
+      await responderComTexto(respostaCatalogo);
+      session.etapa = "menu";
       return;
     }
 
@@ -2697,8 +2294,8 @@ client.on("message", async (msg) => {
     if (gatilhosHorario.some((item) => textoBusca.includes(item))) {
       await typing();
       const mensagemHorario = configData.horarioFuncionamento
-        ? `\n*Horário de funcionamento*\n\n${configData.horarioFuncionamento}\n\nEstamos esperando seu pedido!\n`
-        : "Horário de funcionamento não configurado no painel.";
+        ? `\n*Horario de funcionamento*\n\n${configData.horarioFuncionamento}\n\nEstamos esperando seu pedido!\n`
+        : "Horario de funcionamento nao configurado no painel.";
       await client.sendMessage(msg.from, mensagemHorario);
       session.etapa = "menu";
       return;
@@ -2707,8 +2304,8 @@ client.on("message", async (msg) => {
     if (gatilhosEndereco.some((item) => textoBusca.includes(item))) {
       await typing();
       const mensagemEndereco = configData.enderecoLoja
-        ? `\n*Nosso Endereço*\n\n${configData.enderecoLoja}\n`
-        : "Endereço da loja não configurado no painel.";
+        ? `\n*Nosso Endereco*\n\n${configData.enderecoLoja}\n`
+        : "Endereco da loja nao configurado no painel.";
       await client.sendMessage(msg.from, mensagemEndereco);
       session.etapa = "menu";
       return;
@@ -2819,7 +2416,7 @@ client.on("message", async (msg) => {
 
         await client.sendMessage(
           msg.from,
-          "Me diga seu *bairro* para consultar a taxa e agilizar seu pedido."
+          "�Yss Me diga seu *bairro* para consultar a taxa e agilizar seu pedido."
         );
 
         session.etapa = "taxa";
@@ -2831,12 +2428,12 @@ client.on("message", async (msg) => {
         await typing();
 
         const lista = bairrosData.list.length
-          ? bairrosData.list.map((b) => `- ${b.nome}`).join("\n")
+          ? bairrosData.list.map((b) => `�?� ${b.nome}`).join("\n")
           : "Nenhum bairro cadastrado.";
 
         await client.sendMessage(
           msg.from,
-`*Bairros atendidos*
+`�Y"� *Bairros atendidos*
 
 ${lista}
 
@@ -2850,7 +2447,7 @@ Digite seu bairro para consultar a taxa e seguir para o pedido.`
     if (texto === "3") {
         await typing();
         const mensagemHorario = configData.horarioFuncionamento
-          ? `\n*Horário de funcionamento*\n\n${configData.horarioFuncionamento}\n\nEstamos esperando seu pedido!\n`
+          ? `\n�Y.' *Horário de Funcionamento*\n\n${configData.horarioFuncionamento}\n\n�Y�� Estamos esperando seu pedido!\n`
           : "Horário de funcionamento não configurado no painel.";
         await client.sendMessage(msg.from, mensagemHorario);
         return;
@@ -2859,7 +2456,7 @@ Digite seu bairro para consultar a taxa e seguir para o pedido.`
       if (texto === "4") {
         await typing();
         const mensagemEndereco = configData.enderecoLoja
-          ? `\n*Nosso Endereço*\n\n${configData.enderecoLoja}\n`
+          ? `\n�Y"� *Nosso Endereço*\n\n${configData.enderecoLoja}\n`
           : "Endereço da loja não configurado no painel.";
         await client.sendMessage(msg.from, mensagemEndereco);
         return;
@@ -2998,22 +2595,22 @@ Digite seu bairro para consultar a taxa e seguir para o pedido.`
 
           await client.sendMessage(
             msg.from,
-`Entrega para *${texto}* é *GRÁTIS*!
+`�YZ? Entrega para *${texto}* é *GRÁTIS*!
 
 Pode aproveitar e fazer seu pedido agora:
-${linkPrincipal}`
+�Y'? ${linkPrincipal}`
           );
 
         } else {
 
           await client.sendMessage(
             msg.from,
-`Taxa para *${texto}*
+`�Yss Taxa para *${texto}*
 
 R$ ${taxa},00
 
 Faça seu pedido aqui:
-${linkPrincipal}`
+�Y'? ${linkPrincipal}`
           );
 
         }
@@ -3027,7 +2624,7 @@ ${linkPrincipal}`
 
         await client.sendMessage(
           msg.from,
-`Ainda não atendemos esse bairro.
+`�Y~. Ainda não atendemos esse bairro.
 
 Digite outro bairro ou *menu*.`
         );
@@ -3053,22 +2650,27 @@ Digite outro bairro ou *menu*.`
 
     await client.sendMessage(
       msg.from,
-      `Não consegui entender totalmente.
-Me diga a bebida, marca ou tamanho que você quer e eu já te ajudo.
+      `Nao entendi.
 
 Se quiser pedir agora:
 ${linkPrincipal}
 
-Ou digite *menu* para ver opções.`
+Se precisar de consultoria, envie:
+"12 pessoas, 4 horas, misto"
+
+Ou digite *menu* para ver opcoes.`
     );
 
   } catch (erro) {
 
-    console.log("ERRO:", erro);
+    console.log("�O ERRO:", erro);
 
   }
 
 });
+
+
+
 
 
 
