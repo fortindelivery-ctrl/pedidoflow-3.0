@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
 import { Search, Trash2, DollarSign, Lock, Unlock, Eye, EyeOff, Layers, Plus, AlertCircle, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,6 @@ const PDVPage = () => {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [lastSale, setLastSale] = useState(null);
   const [showSalesHistory, setShowSalesHistory] = useState(false);
-  const [todaySalesTotal, setTodaySalesTotal] = useState(0);
 
   const [loading, setLoading] = useState(true);
   const [clearingMovimentacoes, setClearingMovimentacoes] = useState(false);
@@ -58,6 +57,24 @@ const PDVPage = () => {
   const { fetchMovimentacoes, movimentacoes, ensureCaixaExists, caixaSaldo, getCaixaSaldo, registerSaleMovement } = useCaixaMovimentacoes();
   const { fetchComboInsumos } = useCombos();
 
+  const normalizePaymentMethod = (method) => {
+    const raw = (method || '').toString().trim().toLowerCase();
+    if (!raw) return null;
+    const clean = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (clean.includes('dinheiro')) return 'dinheiro';
+    if (clean.includes('pix')) return 'pix';
+    if (clean.includes('debito')) return 'debito';
+    if (clean.includes('credito')) return 'credito';
+    if (clean.includes('fiado')) return 'fiado';
+    if (clean.includes('consumo')) return 'consumo';
+    return clean;
+  };
+
+  const isNonCashPayment = (method) => {
+    const key = normalizePaymentMethod(method);
+    return key === 'fiado' || key === 'consumo';
+  };
+
   // Derived state
   const isCashierOpen = !!cashierSession;
   const currentEmployee = cashierSession?.funcionario;
@@ -65,73 +82,23 @@ const PDVPage = () => {
 
   const toggleBalanceVisibility = () => setShowBalance(!showBalance);
 
-  const loadTodaySalesTotal = useCallback(async () => {
-    if (!user) return;
-    try {
-      const start = new Date();
-      start.setHours(0, 0, 0, 0);
-      const end = new Date();
-      end.setHours(23, 59, 59, 999);
-      const startIso = start.toISOString();
-      const endIso = end.toISOString();
-
-      const [pagamentosRes, vendasRes] = await Promise.all([
-        supabase
-          .from('venda_pagamentos')
-          .select('venda_id, valor, data_pagamento')
-          .eq('user_id', user.id)
-          .gte('data_pagamento', startIso)
-          .lte('data_pagamento', endIso),
-        (() => {
-          let vendasQuery = supabase
-            .from('vendas')
-            .select('id, total, data_criacao, data_hora, status')
-            .eq('user_id', user.id)
-            .eq('status', 'concluido');
-
-          vendasQuery = vendasQuery.or(`and(data_criacao.gte.${startIso},data_criacao.lte.${endIso}),and(data_hora.gte.${startIso},data_hora.lte.${endIso})`);
-
-          return vendasQuery;
-        })()
-      ]);
-
-      const pagamentos = pagamentosRes.data || [];
-      const vendas = vendasRes.data || [];
-      const paidSaleIds = new Set();
-      let total = 0;
-
-      pagamentos.forEach((p) => {
-        if (p?.venda_id) paidSaleIds.add(p.venda_id);
-        total += Number(p?.valor || 0);
-      });
-
-      vendas.forEach((v) => {
-        if (paidSaleIds.has(v.id)) return;
-        total += Number(v?.total || 0);
-      });
-
-      setTodaySalesTotal(total);
-    } catch (err) {
-      console.error('Error loading today sales total:', err);
-    }
-  }, [user]);
-  
   const todayTotals = useMemo(() => {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
     const end = new Date();
     end.setHours(23, 59, 59, 999);
-    const totals = { sales: todaySalesTotal, supplies: 0, withdrawals: 0, net: 0 };
+    const totals = { sales: 0, supplies: 0, withdrawals: 0, net: 0 };
     (movimentacoes || []).forEach((m) => {
       const dt = new Date(m.data_movimentacao);
       if (dt < start || dt > end) return;
       const val = Number(m.valor) || 0;
-      if (m.tipo === 'suprimento') totals.supplies += val;
+      if (m.tipo === 'venda') totals.sales += val;
+      else if (m.tipo === 'suprimento') totals.supplies += val;
       else if (m.tipo === 'retirada') totals.withdrawals += val;
     });
     totals.net = totals.sales + totals.supplies - totals.withdrawals;
     return totals;
-  }, [movimentacoes, todaySalesTotal]);
+  }, [movimentacoes]);
   const todayExpectedBalance = (Number(cashierSession?.saldo_inicial) || 0) + todayTotals.net;
 
   useEffect(() => {
@@ -142,7 +109,6 @@ const PDVPage = () => {
       loadVendedores();
       getCurrentCashierSession();
       initializeCaixa();
-      loadTodaySalesTotal();
       
       // REALTIME SUBSCRIPTIONS
       const productsSub = supabase
@@ -172,7 +138,7 @@ const PDVPage = () => {
         vendasSub.unsubscribe();
       };
     }
-  }, [user, loadTodaySalesTotal]);
+  }, [user]);
 
   const getFilteredMovimentacoes = () => {
     let data = movimentacoes || [];
@@ -210,8 +176,6 @@ const PDVPage = () => {
       await fetchMovimentacoes(activeCaixaId);
       await getCaixaSaldo(activeCaixaId);
     }
-
-    await loadTodaySalesTotal();
   };
 
   const handleClearMovimentacoes = async () => {
@@ -515,18 +479,36 @@ const PDVPage = () => {
         }
       }
 
-      if (activeCaixaId) {
-         const movimentoForma = vendaData?.forma_pagamento || (finalData.payments && finalData.payments.length > 0 ? finalData.payments[0].method : 'multiplo');
-         await registerSaleMovement(
-           activeCaixaId, 
-           finalData.total, 
-           vendaData.id, 
-           vendaData.numero_venda, 
-           caixaSaldo,
-           movimentoForma
-         );
-         
-         await handleRefreshMovimentacoes();
+      let caixaIdForMovement = activeCaixaId;
+      if (!caixaIdForMovement) {
+        const caixa = await ensureCaixaExists();
+        if (caixa?.id) {
+          caixaIdForMovement = caixa.id;
+          setActiveCaixaId(caixa.id);
+        }
+      }
+
+      if (caixaIdForMovement) {
+        const paymentsArr = Array.isArray(finalData.payments) ? finalData.payments : [];
+        const cashPayments = paymentsArr.filter((p) => !isNonCashPayment(p?.method));
+        const cashTotal = cashPayments.reduce((sum, p) => sum + (Number(p?.value) || 0), 0);
+        const movimentoForma = cashPayments.length === 1
+          ? normalizePaymentMethod(cashPayments[0]?.method)
+          : (cashPayments.length > 1 ? 'multiplo' : null);
+
+        if (cashTotal > 0) {
+          await registerSaleMovement(
+            caixaIdForMovement,
+            cashTotal,
+            vendaData.id,
+            vendaData.numero_venda,
+            caixaSaldo,
+            movimentoForma
+          );
+        }
+
+        await fetchMovimentacoes(caixaIdForMovement);
+        await getCaixaSaldo(caixaIdForMovement);
       }
 
       try {

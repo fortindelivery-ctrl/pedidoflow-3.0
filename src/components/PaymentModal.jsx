@@ -196,9 +196,17 @@ const PaymentModal = ({
         }
       }
 
-      // 1. Get next sale number
-      const { count } = await supabase.from('vendas').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
-      const numeroVenda = (count || 0) + 1;
+      // 1. Get next sale number based on max(numero_venda) to avoid number reuse after deletions
+      const { data: lastSale, error: lastSaleError } = await supabase
+        .from('vendas')
+        .select('numero_venda')
+        .eq('user_id', user.id)
+        .order('numero_venda', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (lastSaleError) throw new Error(`Erro ao gerar número da venda: ${lastSaleError.message}`);
+      const numeroVenda = (Number(lastSale?.numero_venda) || 0) + 1;
 
       // 2. Insert Venda
       const { data: venda, error: vendaError } = await supabase

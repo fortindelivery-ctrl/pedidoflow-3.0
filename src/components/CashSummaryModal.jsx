@@ -135,12 +135,21 @@ const CashSummaryModal = ({ isOpen, onClose, caixaId }) => {
         }
       });
 
-      const { data: pagamentos } = await supabase
-        .from('venda_pagamentos')
-        .select('venda_id, forma_pagamento, valor, data_pagamento')
-        .eq('user_id', user.id)
-        .gte('data_pagamento', startIso)
-        .lte('data_pagamento', endIso);
+      const saleIds = (vendas || []).map((v) => v.id).filter(Boolean);
+      let pagamentos = [];
+      if (saleIds.length > 0) {
+        const { data: pagamentosData, error: pagamentosError } = await supabase
+          .from('venda_pagamentos')
+          .select('venda_id, forma_pagamento, valor')
+          .eq('user_id', user.id)
+          .in('venda_id', saleIds);
+
+        if (pagamentosError) {
+          console.error("Error fetching venda_pagamentos:", pagamentosError);
+        } else {
+          pagamentos = pagamentosData || [];
+        }
+      }
 
       const paidSaleIds = new Set();
 

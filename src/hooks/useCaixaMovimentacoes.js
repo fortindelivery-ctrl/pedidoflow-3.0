@@ -172,7 +172,7 @@ export const useCaixaMovimentacoes = () => {
         caixa_id: caixaId,
         tipo: 'venda',
         valor: valorNum,
-        descricao: `Venda #${numeroVenda || vendaId}`,
+        descricao: `Venda #${numeroVenda || vendaId} | ID:${vendaId}`,
         forma_pagamento: formaPagamento,
         saldo_anterior: saldoAntNum,
         saldo_novo: novoSaldo,
