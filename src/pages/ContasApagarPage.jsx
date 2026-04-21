@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
 import { Search, Plus, Edit, Trash2, CheckCircle, AlertCircle, XCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -86,6 +86,27 @@ const ContasApagarPage = () => {
       endOfDay ? 999 : 0
     );
   };
+  const reminders = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const msPerDay = 24 * 60 * 60 * 1000;
+
+    const alertDays = new Set([7, 3, 1, 0]);
+    const pending = (contas || []).filter((c) => c.status !== 'pago' && c.data_vencimento);
+
+    const mapped = pending.map((conta) => {
+      const due = parseLocalDate(conta.data_vencimento, false);
+      if (!due) return null;
+      const diff = Math.round((due.getTime() - todayStart.getTime()) / msPerDay);
+      if (!alertDays.has(diff)) return null;
+      return {
+        ...conta,
+        diasRestantes: diff
+      };
+    }).filter(Boolean);
+
+    return mapped.sort((a, b) => a.diasRestantes - b.diasRestantes);
+  }, [contas]);
 
   const applySalesDateRange = (query, startIso, endIso) =>
     query.or(`and(data_criacao.gte.${startIso},data_criacao.lte.${endIso}),and(data_hora.gte.${startIso},data_hora.lte.${endIso})`);
@@ -156,7 +177,7 @@ const ContasApagarPage = () => {
       const total = (data || []).reduce((acc, curr) => acc + (parseFloat(curr.total) || 0), 0);
       setSalesPeriodTotal(total);
     } catch (error) {
-      console.error('Erro ao carregar vendas por perÃ­odo:', error);
+      console.error('Erro ao carregar vendas por período:', error);
     } finally {
       setLoadingSalesPeriod(false);
     }
@@ -223,7 +244,7 @@ const ContasApagarPage = () => {
       try {
         const { error } = await supabase.from('contas_pagar').delete().eq('id', id);
         if (error) throw error;
-        toast({ title: 'Conta excluÃ­da com sucesso!' });
+        toast({ title: 'Conta excluída com sucesso!' });
       } catch (error) {
          toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
       }
@@ -249,8 +270,8 @@ const ContasApagarPage = () => {
           .eq('id', conta.id);
 
         toast({
-          title: 'Caixa nÃ£o encontrado',
-          description: 'NÃ£o foi possÃ­vel localizar um caixa para registrar a saÃ­da.',
+          title: 'Caixa não encontrado',
+          description: 'Não foi possível localizar um caixa para registrar a saída.',
           variant: 'destructive'
         });
         return;
@@ -358,8 +379,38 @@ const ContasApagarPage = () => {
 
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-white mb-2">Contas a Pagar</h1>
-        <p className="text-[var(--layout-text-muted)]">GestÃ£o financeira de saÃ­das</p>
+        <p className="text-[var(--layout-text-muted)]">Gestão financeira de saídas</p>
       </div>
+      {reminders.length > 0 && (
+        <div className="bg-gradient-to-br from-yellow-600/15 to-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 sm:p-5 shadow-lg backdrop-blur-sm mb-6">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="bg-yellow-500/20 p-2 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-yellow-300" />
+            </div>
+            <div>
+              <p className="text-yellow-200 font-bold uppercase text-xs tracking-wider">Lembretes de Vencimento</p>
+              <p className="text-yellow-100 text-sm">Contas que vencem em 7, 3, 1 dia ou hoje.</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {reminders.map((conta) => (
+              <div key={conta.id} className="bg-black/20 border border-yellow-500/20 rounded-lg p-3 flex items-center justify-between">
+                <div>
+                  <p className="text-white text-sm font-bold">{conta.descricao}</p>
+                  <p className="text-[var(--layout-text-muted)] text-xs">
+                    Vencimento: {new Date(conta.data_vencimento).toLocaleDateString('pt-BR')}
+                  </p>
+                </div>
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-500/20 text-yellow-200">
+                  {conta.diasRestantes === 0
+                    ? 'Vence hoje'
+                    : `Em ${conta.diasRestantes} dia${conta.diasRestantes === 1 ? '' : 's'}`}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
         <div className="bg-[var(--layout-surface-2)] p-4 sm:p-6 rounded-lg shadow-lg flex items-center justify-between">
@@ -385,7 +436,7 @@ const ContasApagarPage = () => {
         <div className="bg-[var(--layout-surface-2)] p-4 sm:p-6 rounded-lg shadow-lg">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-[var(--layout-text-muted)] text-sm font-medium uppercase">Vendas por PerÃ­odo</p>
+              <p className="text-[var(--layout-text-muted)] text-sm font-medium uppercase">Vendas por Período</p>
               <h3 className="text-2xl font-bold text-white mt-1">
                 {loadingSalesPeriod ? '...' : `R$ ${salesPeriodTotal.toFixed(2)}`}
               </h3>
@@ -394,7 +445,7 @@ const ContasApagarPage = () => {
           <div className="flex gap-2 mb-3 flex-wrap">
             {[
               { key: 'week', label: '1 Semana' },
-              { key: 'month', label: '1 MÃªs' },
+              { key: 'month', label: '1 Mês' },
               { key: 'custom', label: 'Personalizado' }
             ].map((opt) => (
               <button
@@ -464,7 +515,7 @@ const ContasApagarPage = () => {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar por descriÃ§Ã£o ou fornecedor..."
+              placeholder="Buscar por descrição ou fornecedor..."
               className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-lg pl-10 pr-4 py-2 text-white placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none"
             />
           </div>
@@ -497,12 +548,12 @@ const ContasApagarPage = () => {
           <table className="w-full min-w-[900px] whitespace-nowrap">
             <thead>
               <tr className="border-b border-[var(--layout-border)]">
-                <th className="py-3 px-4 text-left text-xs font-bold text-[var(--layout-text-muted)] uppercase">DescriÃ§Ã£o</th>
+                <th className="py-3 px-4 text-left text-xs font-bold text-[var(--layout-text-muted)] uppercase">Descrição</th>
                 <th className="py-3 px-4 text-left text-xs font-bold text-[var(--layout-text-muted)] uppercase">Fornecedor</th>
                 <th className="py-3 px-4 text-center text-xs font-bold text-[var(--layout-text-muted)] uppercase">Vencimento</th>
                 <th className="py-3 px-4 text-right text-xs font-bold text-[var(--layout-text-muted)] uppercase">Valor</th>
                 <th className="py-3 px-4 text-center text-xs font-bold text-[var(--layout-text-muted)] uppercase">Status</th>
-                <th className="py-3 px-4 text-right text-xs font-bold text-[var(--layout-text-muted)] uppercase">AÃ§Ãµes</th>
+                <th className="py-3 px-4 text-right text-xs font-bold text-[var(--layout-text-muted)] uppercase">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700">
@@ -574,7 +625,7 @@ const ContasApagarPage = () => {
             
             <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
               <div>
-                <label className="block text-[var(--layout-text-muted)] text-sm font-medium mb-2">DescriÃ§Ã£o *</label>
+                <label className="block text-[var(--layout-text-muted)] text-sm font-medium mb-2">Descrição *</label>
                 <input
                   type="text"
                   required
@@ -621,7 +672,7 @@ const ContasApagarPage = () => {
               </div>
 
               <div>
-                <label className="block text-[var(--layout-text-muted)] text-sm font-medium mb-2">ObservaÃ§Ãµes</label>
+                <label className="block text-[var(--layout-text-muted)] text-sm font-medium mb-2">Observações</label>
                 <textarea
                   value={formData.observacoes}
                   onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
@@ -654,5 +705,9 @@ const ContasApagarPage = () => {
 };
 
 export default ContasApagarPage;
+
+
+
+
 
 
