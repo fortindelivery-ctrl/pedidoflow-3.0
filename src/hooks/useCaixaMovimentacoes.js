@@ -61,7 +61,14 @@ export const useCaixaMovimentacoes = () => {
     setLoading(true);
     try {
       const valorNum = parseFloat(valor);
-      const saldoAntNum = parseFloat(saldoAnterior || 0);
+      let saldoAntNum = parseFloat(saldoAnterior || 0);
+      const saldoAtual = await getCaixaSaldo(caixaId);
+      if (Number.isFinite(Number(saldoAtual))) {
+        saldoAntNum = Number(saldoAtual);
+      }
+      if (!Number.isFinite(valorNum) || valorNum <= 0) {
+        throw new Error('Valor de suprimento invalido.');
+      }
       const novoSaldo = saldoAntNum + valorNum;
 
       // 1. Insert Movement
@@ -110,7 +117,17 @@ export const useCaixaMovimentacoes = () => {
     setLoading(true);
     try {
       const valorNum = parseFloat(valor);
-      const saldoAntNum = parseFloat(saldoAnterior || 0);
+      let saldoAntNum = parseFloat(saldoAnterior || 0);
+      const saldoAtual = await getCaixaSaldo(caixaId);
+      if (Number.isFinite(Number(saldoAtual))) {
+        saldoAntNum = Number(saldoAtual);
+      }
+      if (!Number.isFinite(valorNum) || valorNum <= 0) {
+        throw new Error('Valor de retirada invalido.');
+      }
+      if (valorNum > saldoAntNum) {
+        throw new Error(`Saldo insuficiente. Saldo atual: R$ ${saldoAntNum.toFixed(2)}`);
+      }
       const novoSaldo = saldoAntNum - valorNum;
 
       if (novoSaldo < 0) {

@@ -7,6 +7,7 @@ import {
   Briefcase,
   CreditCard,
   History,
+  Link2,
   Package,
   Palette,
   ShoppingCart,
@@ -27,5 +28,6 @@ export const sidebarMenuItems = [
   { path: '/dashboard/relatorios/historico-vendas', label: 'Histórico de Vendas', icon: History },
   { path: '/dashboard/relatorios/caixa', label: 'Caixa', icon: Briefcase },
   { path: '/dashboard/chatbot', label: 'CHATBOT', icon: Bot },
+  { path: '/dashboard/ifood-99', label: 'IFOOD & 99', icon: Link2 },
   { path: '/dashboard/cores-layout', label: 'Mudar as cores do layout', icon: Palette },
 ];

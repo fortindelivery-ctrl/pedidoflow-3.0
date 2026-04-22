@@ -31,11 +31,17 @@ const EditSaleModal = ({ isOpen, onClose, sale, onSave }) => {
   const fetchVendedores = async () => {
     try {
       const { data } = await supabase
-        .from('vendedores')
-        .select('id, nome')
+        .from('funcionarios')
+        .select('id, nome, status')
         .eq('user_id', user.id)
-        .eq('ativo', true);
-      setVendedores(data || []);
+        .order('nome', { ascending: true });
+
+      const ativos = (data || []).filter((item) => {
+        const status = String(item?.status || '').trim().toLowerCase();
+        return status === '' || status === 'ativo';
+      });
+
+      setVendedores(ativos.map((item) => ({ id: item.id, nome: item.nome })));
     } catch (error) {
       console.error('Error fetching vendedores:', error);
     }

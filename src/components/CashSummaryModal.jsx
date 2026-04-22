@@ -18,6 +18,7 @@ const CashSummaryModal = ({ isOpen, onClose, caixaId }) => {
     const clean = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (clean.includes('dinheiro')) return 'dinheiro';
     if (clean.includes('pix')) return 'pix';
+    if (clean.includes('qrcode') || clean.includes('qr code') || clean === 'qr' || clean.includes('qr_')) return 'qrcode';
     if (clean.includes('debito')) return 'debito';
     if (clean.includes('credito')) return 'credito';
     if (clean.includes('fiado')) return 'fiado';
@@ -37,6 +38,7 @@ const CashSummaryModal = ({ isOpen, onClose, caixaId }) => {
     payments: {
       dinheiro: 0,
       pix: 0,
+      qrcode: 0,
       debito: 0,
       credito: 0,
       fiado: 0,
@@ -122,7 +124,7 @@ const CashSummaryModal = ({ isOpen, onClose, caixaId }) => {
       let salesCount = vendas?.length || 0;
       let totalSales = 0;
       let totalCost = 0;
-      const payments = { dinheiro: 0, pix: 0, debito: 0, credito: 0, fiado: 0, consumo: 0 };
+      const payments = { dinheiro: 0, pix: 0, qrcode: 0, debito: 0, credito: 0, fiado: 0, consumo: 0 };
 
       vendas?.forEach(venda => {
         totalSales += Number(venda.total);
@@ -292,6 +294,7 @@ const CashSummaryModal = ({ isOpen, onClose, caixaId }) => {
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       <PaymentCard icon={<DollarSign className="w-4 h-4" />} label="Dinheiro" value={summaryData.payments.dinheiro} color="border-[var(--layout-accent)] text-[var(--layout-accent)]" />
                       <PaymentCard icon={<Smartphone className="w-4 h-4" />} label="Pix" value={summaryData.payments.pix} color="border-[var(--layout-accent)] text-[var(--layout-accent)]" />
+                      <PaymentCard icon={<Smartphone className="w-4 h-4" />} label="QR Code" value={summaryData.payments.qrcode} color="border-sky-400 text-sky-300" />
                       <PaymentCard icon={<CreditCard className="w-4 h-4" />} label="Débito" value={summaryData.payments.debito} color="border-[var(--layout-accent)] text-[var(--layout-accent)]" />
                       <PaymentCard icon={<CreditCard className="w-4 h-4" />} label="Crédito" value={summaryData.payments.credito} color="border-[var(--layout-accent)] text-[var(--layout-accent)]" />
                       <PaymentCard icon={<FileText className="w-4 h-4" />} label="Fiado" value={summaryData.payments.fiado} color="border-[var(--layout-accent)] text-[var(--layout-accent)]" />

@@ -63,6 +63,7 @@ const PDVPage = () => {
     const clean = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (clean.includes('dinheiro')) return 'dinheiro';
     if (clean.includes('pix')) return 'pix';
+    if (clean.includes('qrcode') || clean.includes('qr code') || clean === 'qr' || clean.includes('qr_')) return 'qrcode';
     if (clean.includes('debito')) return 'debito';
     if (clean.includes('credito')) return 'credito';
     if (clean.includes('fiado')) return 'fiado';
@@ -263,7 +264,22 @@ const PDVPage = () => {
     try { const { data } = await supabase.from('motoboys').select('id,nome,telefone').eq('user_id', user.id).eq('status','ativo'); setMotoboys(data || []); } catch (e) { console.error(e); }
   };
   const loadVendedores = async () => {
-    try { const { data } = await supabase.from('vendedores').select('id,nome').eq('user_id', user.id).eq('ativo', true); setVendedores(data || []); } catch (e) { console.error(e); }
+    try {
+      const { data } = await supabase
+        .from('funcionarios')
+        .select('id,nome,status')
+        .eq('user_id', user.id)
+        .order('nome', { ascending: true });
+
+      const ativos = (data || []).filter((item) => {
+        const status = String(item?.status || '').trim().toLowerCase();
+        return status === '' || status === 'ativo';
+      });
+
+      setVendedores(ativos.map((item) => ({ id: item.id, nome: item.nome })));
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const addSearchedProduct = () => {
@@ -651,6 +667,7 @@ const PDVPage = () => {
                         <option value="all">Todas</option>
                         <option value="dinheiro">Dinheiro</option>
                         <option value="pix">PIX</option>
+                        <option value="qrcode">QR Code</option>
                         <option value="debito">Débito</option>
                         <option value="credito">Crédito</option>
                         <option value="fiado">Fiado</option>

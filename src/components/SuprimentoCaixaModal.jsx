@@ -12,18 +12,20 @@ const SuprimentoCaixaModal = ({ isOpen, onClose, caixaId, cashierName, currentBa
   const [descricao, setDescricao] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('Dinheiro');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { addSuprimento } = useCaixaMovimentacoes();
+  const [realTimeBalance, setRealTimeBalance] = useState(currentBalance);
+  const { addSuprimento, getCaixaSaldo } = useCaixaMovimentacoes();
   const { toast } = useToast();
-  const baseBalance = parseFloat(displayBalance ?? currentBalance ?? 0);
+  const baseBalance = parseFloat(realTimeBalance ?? currentBalance ?? 0);
   const previewBalance = baseBalance + (parseFloat(valor) || 0);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && caixaId) {
       setValor('');
       setDescricao('');
       setFormaPagamento('Dinheiro');
+      getCaixaSaldo(caixaId).then((balance) => setRealTimeBalance(balance));
     }
-  }, [isOpen]);
+  }, [isOpen, caixaId, getCaixaSaldo]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,7 +48,7 @@ const SuprimentoCaixaModal = ({ isOpen, onClose, caixaId, cashierName, currentBa
     try {
       setIsSubmitting(true);
       // addSuprimento handles its own success/error toasts internally, but returns boolean for flow control
-      const success = await addSuprimento(caixaId, valor, descricao, formaPagamento, currentBalance);
+      const success = await addSuprimento(caixaId, valor, descricao, formaPagamento, realTimeBalance);
       
       if (success) {
         if (onSuccess) onSuccess();
@@ -92,7 +94,7 @@ const SuprimentoCaixaModal = ({ isOpen, onClose, caixaId, cashierName, currentBa
         {/* Balance Display */}
         <div className="px-6 py-4 bg-[#232f3e]">
            <span className="text-gray-400 text-xs uppercase block mb-1">Saldo do Dia</span>
-           <span className="text-2xl font-bold text-white">R$ {parseFloat(displayBalance ?? currentBalance ?? 0).toFixed(2)}</span>
+           <span className="text-2xl font-bold text-white">R$ {parseFloat(realTimeBalance ?? currentBalance ?? 0).toFixed(2)}</span>
         </div>
 
         {/* Form */}

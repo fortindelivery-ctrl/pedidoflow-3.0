@@ -1,5 +1,5 @@
-﻿// =====================================
-// IMPORTACOES
+// =====================================
+// IMPORTAÃ‡Ã•ES
 // =====================================
 require("dotenv").config();
 const http = require("http");
@@ -61,42 +61,6 @@ const normalizarChave = (texto = "") =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
-
-const normalizarGatilho = (texto = "") =>
-  normalizarChave(texto)
-    .replace(/[^a-z0-9\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-const garantirLista = (valor) => (Array.isArray(valor) ? valor : [valor]);
-const combinarTermos = (...listas) => {
-  let combos = [""];
-  for (const lista of listas) {
-    const termos = garantirLista(lista).filter(Boolean);
-    combos = combos.flatMap((prefixo) =>
-      termos.map((termo) =>
-        [prefixo, termo].filter(Boolean).join(" ").replace(/\s+/g, " ").trim()
-      )
-    );
-  }
-  return combos.filter(Boolean);
-};
-
-const normalizarListaInPlace = (lista) => {
-  const normalizados = lista.map((item) => normalizarGatilho(item)).filter(Boolean);
-  lista.length = 0;
-  lista.push(...new Set(normalizados));
-};
-
-const mesclarGatilhos = (destino, extras) => {
-  const atuais = new Set(destino.map((item) => normalizarGatilho(item)).filter(Boolean));
-  for (const item of extras) {
-    const normalizado = normalizarGatilho(item);
-    if (!normalizado || atuais.has(normalizado)) continue;
-    destino.push(normalizado);
-    atuais.add(normalizado);
-  }
-};
 
 const limparJson = (texto = "") => String(texto || "").replace(/^\uFEFF/, "");
 const esperar = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -378,7 +342,7 @@ const prepararCacheWweb = async () => {
 // QR CODE
 // =====================================
 client.on("qr", (qr) => {
-  console.log("Escaneie o QR Code:");
+  console.log("ðŸ“² Escaneie o QR Code:");
   qrcode.generate(qr, { small: false });
 });
 
@@ -386,11 +350,11 @@ client.on("qr", (qr) => {
 // BOT ONLINE
 // =====================================
 client.on("ready", () => {
-  console.log("BOT ONLINE COM SUCESSO");
+  console.log("âœ… BOT ONLINE COM SUCESSO");
 });
 
 client.on("authenticated", () => {
-  console.log("WhatsApp autenticado com sucesso");
+  console.log("ðŸ” WhatsApp autenticado com sucesso");
 });
 
 client.on("auth_failure", (msg) => {
@@ -399,7 +363,7 @@ client.on("auth_failure", (msg) => {
   ultimoQr = null;
   qrDataUrl = null;
   qrPngBuffer = null;
-  console.log("Falha de autenticacao:", msg);
+  console.log("âŒ Falha de autenticaÃ§Ã£o:", msg);
 
   if (AUTO_REINICIAR_EM_FALHA) {
     reiniciarCliente(ultimoErroAuth, { limparSessao: AUTO_LIMPAR_SESSAO });
@@ -407,10 +371,10 @@ client.on("auth_failure", (msg) => {
 });
 
 // =====================================
-// DESCONEXAO
+// DESCONEXÃƒO
 // =====================================
 client.on("disconnected", (reason) => {
-  console.log("WhatsApp desconectado:", reason);
+  console.log("âš ï¸ WhatsApp desconectado:", reason);
   if (AUTO_REINICIAR_EM_FALHA) {
     const motivo = String(reason || "");
     const limparSessao = AUTO_LIMPAR_SESSAO && motivo.toUpperCase().includes("LOGOUT");
@@ -671,7 +635,7 @@ const servidor = http.createServer((req, res) => {
 
         atualizarBairros(lista);
         salvarBairros(lista);
-        console.log(`Bairros sincronizados: ${lista.length}`);
+        console.log(`âœ… Bairros sincronizados: ${lista.length}`);
 
         res.writeHead(200, {
           ...headersSemCache,
@@ -1041,7 +1005,7 @@ const iniciarServidor = (portaInicial) => {
       return;
     }
 
-    console.log("Erro no servidor HTTP:", erro);
+    console.log("âŒ Erro no servidor HTTP:", erro);
   });
 
   tentar();
@@ -1056,26 +1020,16 @@ iniciarCliente();
 // =====================================
 const sessions = new Map();
 const antiSpam = new Map();
-const mensagensProcessadas = new Map();
-
-const limparMensagensProcessadas = () => {
-  const limite = Date.now() - 10 * 60 * 1000;
-  for (const [id, quando] of mensagensProcessadas.entries()) {
-    if (quando < limite) {
-      mensagensProcessadas.delete(id);
-    }
-  }
-};
 
 // =====================================
-// LINK DO CARDAPIO
+// LINK DO CARDÃPIO
 // =====================================
 const linkPrincipal = "https://instadelivery.com.br/fortindelivery";
 
 // =====================================
 // PALAVRAS-CHAVE DE VENDA
 // =====================================
-const gatilhosMenu = /^(menu|pedido)$/i;
+const gatilhosMenu = /^(menu|oi|ola|bom dia|boa tarde|boa noite|pedido|opa)$/i;
 const gatilhosCompra = [
   "cerveja",
   "cervejas",
@@ -1170,261 +1124,6 @@ const gatilhosEndereco = [
   "endereco da loja",
   "endereço da loja",
 ];
-const gatilhosSaudacao = [];
-const gatilhosTaxa = [];
-const gatilhosHorario = [];
-const gatilhosPagamento = [];
-const gatilhosTempoEntrega = [];
-const gatilhosAtendente = [];
-
-const gerarGatilhosPedido = () => {
-  const verbosPedido = [
-    "quero",
-    "queria",
-    "quero pedir",
-    "queria pedir",
-    "vou querer",
-    "gostaria",
-    "gostaria de",
-    "poderia",
-    "pode",
-    "pode mandar",
-    "pode me mandar",
-    "me ve",
-    "me vê",
-    "me ve ai",
-    "me vê ai",
-    "me manda",
-    "manda",
-    "manda ai",
-    "me traz",
-    "separa",
-    "separe",
-    "me envia",
-    "fechar pedido",
-  ];
-  const produtos = [
-    "bebida",
-    "bebidas",
-    "cerveja",
-    "cervejas",
-    "whisky",
-    "vodka",
-    "gin",
-    "energetico",
-    "energético",
-    "refrigerante",
-    "refri",
-    "agua",
-    "água",
-    "suco",
-    "gelo",
-    "carvao",
-    "carvão",
-    "combo",
-    "kit",
-  ];
-  const quantidades = [
-    "1",
-    "2",
-    "3",
-    "4",
-    "6",
-    "8",
-    "10",
-    "12",
-    "uma",
-    "um",
-    "duas",
-    "dois",
-    "tres",
-    "quatro",
-    "seis",
-    "meia duzia",
-  ];
-  const unidades = [
-    "lata",
-    "latas",
-    "long neck",
-    "garrafa",
-    "garrafas",
-    "pet",
-    "caixa",
-    "fardo",
-  ];
-
-  const combinacoes = [];
-  combinacoes.push(...combinarTermos(verbosPedido, produtos));
-  combinacoes.push(...combinarTermos(verbosPedido, quantidades, produtos));
-  combinacoes.push(...combinarTermos(verbosPedido, unidades, "de", produtos));
-  combinacoes.push(...combinarTermos("tem", produtos));
-  combinacoes.push(...combinarTermos("tem", produtos, "hoje"));
-  combinacoes.push(...combinarTermos("vende", produtos));
-  combinacoes.push(...combinarTermos("vocês vendem", produtos));
-  combinacoes.push(...combinarTermos("voces vendem", produtos));
-  combinacoes.push(...combinarTermos("vc vende", produtos));
-  combinacoes.push(...combinarTermos("você vende", produtos));
-  combinacoes.push(...combinarTermos("voce vende", produtos));
-  return combinacoes;
-};
-
-const adicionarGatilhosExpandidos = () => {
-  normalizarListaInPlace(gatilhosCompra);
-  normalizarListaInPlace(gatilhosAgradecimento);
-  normalizarListaInPlace(gatilhosCordialidade);
-  normalizarListaInPlace(gatilhosConfirmacao);
-  normalizarListaInPlace(gatilhosDespedida);
-  normalizarListaInPlace(gatilhosPosterior);
-  normalizarListaInPlace(gatilhosCardapio);
-  normalizarListaInPlace(gatilhosConsultoria);
-  normalizarListaInPlace(gatilhosOrcamento);
-  normalizarListaInPlace(gatilhosEndereco);
-
-  const saudacoesBase = [
-    "oi",
-    "ola",
-    "olá",
-    "e ai",
-    "e aí",
-    "opa",
-    "fala",
-    "salve",
-    "bom dia",
-    "boa tarde",
-    "boa noite",
-  ];
-  const cordialidades = [
-    "tudo bem",
-    "tudo certo",
-    "tudo ok",
-    "tudo tranquilo",
-    "como vai",
-    "como voce esta",
-    "como voce ta",
-    "como vc ta",
-  ];
-  const agradecimentos = [
-    "obrigado",
-    "obrigada",
-    "muito obrigado",
-    "muito obrigada",
-    "valeu",
-    "vlw",
-    "grato",
-    "grata",
-    "agradecido",
-    "agradecida",
-    "brigado",
-    "brigada",
-    "brigadão",
-    "brigadao",
-  ];
-  const despedidas = [
-    "tchau",
-    "adeus",
-    "ate logo",
-    "ate mais",
-    "ate mais tarde",
-    "ate breve",
-    "falou",
-    "fui",
-    "bom descanso",
-    "boa noite",
-  ];
-  const cardapioBase = [
-    "cardapio",
-    "cardápio",
-    "menu",
-    "manda o cardapio",
-    "me manda o cardapio",
-    "envia o cardapio",
-    "quero ver o cardapio",
-    "tem cardapio",
-    "lista de bebidas",
-    "catalogo",
-    "catálogo",
-  ];
-  const taxaBase = [
-    "taxa de entrega",
-    "taxa",
-    "frete",
-    "valor da entrega",
-    "quanto e a entrega",
-    "quanto é a entrega",
-    "quanto e a taxa",
-    "quanto é a taxa",
-  ];
-  const horarioBase = [
-    "horario",
-    "horário",
-    "funcionamento",
-    "abre que horas",
-    "fecha que horas",
-    "qual horario",
-    "qual horário",
-    "horario de funcionamento",
-    "horário de funcionamento",
-  ];
-  const pagamentoBase = [
-    "pix",
-    "cartao",
-    "cartão",
-    "credito",
-    "crédito",
-    "debito",
-    "débito",
-    "dinheiro",
-    "troco",
-    "aceita pix",
-    "aceita cartao",
-    "aceita cartão",
-    "aceita dinheiro",
-  ];
-  const tempoEntregaBase = [
-    "tempo de entrega",
-    "quanto tempo",
-    "demora",
-    "prazo",
-    "chega em quanto tempo",
-    "tempo para chegar",
-  ];
-  const atendenteBase = [
-    "falar com atendente",
-    "atendente",
-    "humano",
-    "pessoa real",
-    "preciso de ajuda",
-    "quero atendimento",
-  ];
-  const confirmacaoBase = ["ok", "okay", "okey", "blz", "beleza", "certo", "fechou", "top", "show"];
-  const posteriorBase = [
-    "vou pedir depois",
-    "depois eu faco",
-    "depois eu faço",
-    "mais tarde eu peco",
-    "mais tarde eu peço",
-    "vou ver depois",
-    "vou pedir mais tarde",
-  ];
-
-  mesclarGatilhos(gatilhosSaudacao, saudacoesBase);
-  mesclarGatilhos(gatilhosCordialidade, combinarTermos(saudacoesBase, cordialidades));
-  mesclarGatilhos(gatilhosCordialidade, cordialidades);
-  mesclarGatilhos(gatilhosAgradecimento, agradecimentos);
-  mesclarGatilhos(gatilhosDespedida, despedidas);
-  mesclarGatilhos(gatilhosCardapio, cardapioBase);
-  mesclarGatilhos(gatilhosOrcamento, ["preco", "preço", "valor", "custa", "quanto fica", "quanto sai"]);
-  mesclarGatilhos(gatilhosTaxa, taxaBase);
-  mesclarGatilhos(gatilhosHorario, horarioBase);
-  mesclarGatilhos(gatilhosPagamento, pagamentoBase);
-  mesclarGatilhos(gatilhosTempoEntrega, tempoEntregaBase);
-  mesclarGatilhos(gatilhosAtendente, atendenteBase);
-  mesclarGatilhos(gatilhosConfirmacao, confirmacaoBase);
-  mesclarGatilhos(gatilhosPosterior, posteriorBase);
-  mesclarGatilhos(gatilhosCompra, gerarGatilhosPedido());
-};
-
-adicionarGatilhosExpandidos();
 
 // =====================================
 // NORMALIZAR TEXTO
@@ -2024,14 +1723,6 @@ const obterSaudacao = () => {
   return "Boa noite";
 };
 
-const obterSaudacaoPorTexto = (textoBusca = "") => {
-  const texto = String(textoBusca).toLowerCase();
-  if (texto.includes("bom dia")) return "Bom dia";
-  if (texto.includes("boa tarde")) return "Boa tarde";
-  if (texto.includes("boa noite")) return "Boa noite";
-  return obterSaudacao();
-};
-
 const montarMenuPrincipal = () => `${obterSaudacao()}!
 
 Oi! Sou o assistente comercial da Fortin Delivery.
@@ -2062,8 +1753,6 @@ Ou escolha:
 const mensagemAtendente = `Certo! Vou pausar o robô por 10 minutos para você conversar com o atendente.
 
 Depois desse período eu volto a responder por aqui.`;
-const mensagemStopConversa = "Robô pausado somente nesta conversa. Para reativar, envie /start.";
-const mensagemStartConversa = "Robô reativado nesta conversa. Pode continuar.";
 const mensagemAudioNaoEntendido = "Recebi seu áudio, mas não consegui entender. Pode enviar novamente ou escrever por texto.";
 const mensagemAgradecimento = `Que bom falar com você! Muito obrigado pelo carinho.
 
@@ -2093,12 +1782,6 @@ const mensagemCordialidade = `Tudo certo por aqui!
 Se quiser, posso te ajudar com seu pedido de bebidas, taxa de entrega, horário ou endereço.
 
 Digite *menu* para ver as opções.`;
-const montarMensagemSaudacao = (saudacao = obterSaudacao()) => `${saudacao}!
-
-Posso te ajudar com seu pedido.
-Se quiser ver o cardápio, digite *menu*.`;
-const mensagemPagamento = "Qual forma de pagamento você prefere? Posso confirmar se é Pix, cartão ou dinheiro.";
-const mensagemTempoEntrega = "O tempo de entrega varia por bairro e horário. Me diga seu bairro que eu confirmo.";
 const mensagemCardapio = `Claro!
 
 Cardápio:
@@ -2119,7 +1802,7 @@ const mensagemOrcamento = "Me diga um orcamento aproximado e as bebidas preferid
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
 // =====================================
-// IA - UTILITARIOS
+// IA - UTILITÃRIOS
 // =====================================
 const obterValorPorCaminho = (obj, caminho) => {
   if (!caminho || typeof caminho !== "string") return null;
@@ -2321,70 +2004,6 @@ const gerarRespostaIA = async (mensagem) => {
   }
 };
 
-const obterIdConversa = (msg) => {
-  if (!msg) return null;
-  const enviadaPeloBot = Boolean(msg.fromMe || msg.id?.fromMe);
-  if (enviadaPeloBot && msg.to) return msg.to;
-  return msg.from || null;
-};
-
-const extrairComandosConversa = (texto = "") => {
-  const textoOriginal = String(texto || "").trim().toLowerCase();
-  const textoComando = normalizarParaBusca(textoOriginal);
-  const comandoStop =
-    textoOriginal === "/stop" ||
-    textoOriginal.startsWith("/stop ") ||
-    textoComando === "stop" ||
-    textoComando.startsWith("stop ");
-  const comandoStart =
-    textoOriginal === "/start" ||
-    textoOriginal.startsWith("/start ") ||
-    textoComando === "start" ||
-    textoComando.startsWith("start ");
-
-  return { comandoStop, comandoStart };
-};
-
-const aplicarComandoControleConversa = async (msg) => {
-  const conversaId = obterIdConversa(msg);
-  if (!conversaId) return false;
-  if (conversaId === "status@broadcast") return false;
-  if (conversaId.endsWith("@g.us")) return false;
-
-  const { comandoStop, comandoStart } = extrairComandosConversa(msg.body || "");
-  if (!comandoStop && !comandoStart) return false;
-
-  if (!sessions.has(conversaId)) {
-    sessions.set(conversaId, { etapa: "menu" });
-  }
-  const session = sessions.get(conversaId);
-
-  if (comandoStop) {
-    session.pausadoManual = true;
-    delete session.pausadoAte;
-    session.etapa = "menu";
-    await client.sendMessage(conversaId, mensagemStopConversa);
-    console.log("Comando /stop aplicado na conversa:", conversaId);
-    return true;
-  }
-
-  session.etapa = "menu";
-  delete session.pausadoManual;
-  delete session.pausadoAte;
-  await client.sendMessage(conversaId, mensagemStartConversa);
-  console.log("Comando /start aplicado na conversa:", conversaId);
-  return true;
-};
-
-client.on("message_create", async (msg) => {
-  try {
-    if (!(msg.fromMe || msg.id?.fromMe)) return;
-    await aplicarComandoControleConversa(msg);
-  } catch (erro) {
-    console.log("ERRO ao processar comando da conversa:", erro);
-  }
-});
-
 // =====================================
 // RECEBER MENSAGENS
 // =====================================
@@ -2404,19 +2023,8 @@ client.on("message", async (msg) => {
     // BLOQUEIA GRUPOS
     if (msg.from.endsWith("@g.us")) return;
 
-    if (await aplicarComandoControleConversa(msg)) return;
-
     // BLOQUEIA MENSAGENS DO BOT
-    if (msg.fromMe || msg.id?.fromMe) return;
-    const botId = client.info?.wid?._serialized;
-    if (botId && (msg.from === botId || msg.author === botId)) return;
-
-    const msgId = msg.id?._serialized;
-    if (msgId) {
-      if (mensagensProcessadas.has(msgId)) return;
-      mensagensProcessadas.set(msgId, Date.now());
-      limparMensagensProcessadas();
-    }
+    if (msg.fromMe) return;
 
     const mensagemEhAudio = isIncomingAudioMessage(msg);
 
@@ -2478,22 +2086,13 @@ client.on("message", async (msg) => {
       if (Date.now() < session.pausadoAte) return;
       delete session.pausadoAte;
     }
-    if (session.pausadoManual) return;
 
 
-    const textoBusca = normalizarParaBusca(textoOriginal);
-    const palavrasTextoBusca = textoBusca.split(" ").filter(Boolean);
+    const aiSempreAtivo = configData.ai.enabled && configData.ai.mode === "always";
     let aiTentada = false;
 
-    if (textoBusca === "boa noite") {
-      await typing();
-      await client.sendMessage(msg.from, "Boa noite!");
-      session.etapa = "menu";
-      return;
-    }
-
-    if (session.etapa === "pedido_escolha") {
-      if (gatilhosMenu.test(textoBusca)) {
+    if (!aiSempreAtivo && session.etapa === "pedido_escolha") {
+      if (gatilhosMenu.test(texto)) {
         await typing();
         await client.sendMessage(msg.from, montarMenuPrincipal());
         session.etapa = "menu";
@@ -2559,8 +2158,8 @@ client.on("message", async (msg) => {
       return;
     }
 
-    if (session.etapa === "pedido_quantidade") {
-      if (gatilhosMenu.test(textoBusca)) {
+    if (!aiSempreAtivo && session.etapa === "pedido_quantidade") {
+      if (gatilhosMenu.test(texto)) {
         await typing();
         await client.sendMessage(msg.from, montarMenuPrincipal());
         session.etapa = "menu";
@@ -2599,33 +2198,44 @@ client.on("message", async (msg) => {
       return;
     }
 
-    const respostaCatalogo = respostaCatalogoSeAplicavel(textoOriginal);
-    if (respostaCatalogo) {
-      const textoResposta =
-        typeof respostaCatalogo === "string" ? respostaCatalogo : respostaCatalogo.texto;
-      await responderComTexto(textoResposta);
-      if (respostaCatalogo && typeof respostaCatalogo === "object") {
-        session.etapa = respostaCatalogo.etapa || "menu";
-        if (respostaCatalogo.itens) {
-          session.pedidoOpcoes = respostaCatalogo.itens;
-        } else if (respostaCatalogo.item) {
-          session.pedidoItem = respostaCatalogo.item;
+    if (aiSempreAtivo) {
+      aiTentada = true;
+      const respostaAi = await gerarRespostaIA(textoOriginal);
+      if (respostaAi) {
+        await responderComTexto(respostaAi);
+        return;
+      }
+    }
+
+    if (!aiSempreAtivo) {
+      const respostaCatalogo = respostaCatalogoSeAplicavel(textoOriginal);
+      if (respostaCatalogo) {
+        const textoResposta =
+          typeof respostaCatalogo === "string" ? respostaCatalogo : respostaCatalogo.texto;
+        await responderComTexto(textoResposta);
+        if (respostaCatalogo && typeof respostaCatalogo === "object") {
+          session.etapa = respostaCatalogo.etapa || "menu";
+          if (respostaCatalogo.itens) {
+            session.pedidoOpcoes = respostaCatalogo.itens;
+          } else if (respostaCatalogo.item) {
+            session.pedidoItem = respostaCatalogo.item;
+          } else {
+            session.pedidoOpcoes = null;
+            session.pedidoItem = null;
+          }
         } else {
+          session.etapa = "menu";
           session.pedidoOpcoes = null;
           session.pedidoItem = null;
         }
-      } else {
-        session.etapa = "menu";
-        session.pedidoOpcoes = null;
-        session.pedidoItem = null;
+        return;
       }
-      return;
     }
 
     // =====================================
     // MENU
     // =====================================
-    if (gatilhosMenu.test(textoBusca)) {
+    if (!aiSempreAtivo && gatilhosMenu.test(texto)) {
 
       await typing();
 
@@ -2638,7 +2248,7 @@ client.on("message", async (msg) => {
     // =====================================
     // INTERESSE DE COMPRA
     // =====================================
-    if (gatilhosCardapio.some((item) => textoBusca.includes(item))) {
+    if (!aiSempreAtivo && gatilhosCardapio.some((item) => texto.includes(item))) {
 
       await typing();
       await client.sendMessage(msg.from, mensagemCardapio);
@@ -2646,7 +2256,7 @@ client.on("message", async (msg) => {
       return;
     }
 
-    if (gatilhosCompra.some((item) => textoBusca.includes(item))) {
+    if (!aiSempreAtivo && gatilhosCompra.some((item) => texto.includes(item))) {
 
       await typing();
       await client.sendMessage(msg.from, mensagemCompraDireta);
@@ -2654,57 +2264,14 @@ client.on("message", async (msg) => {
       return;
     }
 
-    if (gatilhosConsultoria.some((item) => textoBusca.includes(item))) {
-      const numeros = extrairNumeros(textoOriginal);
-      const perfil = classificarPerfilCompra(texto);
-      if (numeros.length >= 2 && perfil) {
-        await typing();
-        await client.sendMessage(
-          msg.from,
-          montarResumoConsultoria({
-            pessoas: numeros[0],
-            duracao: numeros[1],
-            perfil,
-          })
-        );
-        session.etapa = "menu";
-        return;
-      }
-
-      await typing();
-      await client.sendMessage(msg.from, mensagemConsultoriaInicio);
-      session.etapa = "consultoria_pessoas";
-      return;
-    }
-
-    if (gatilhosOrcamento.some((item) => textoBusca.includes(item))) {
+    if (!aiSempreAtivo && gatilhosOrcamento.some((item) => texto.includes(item))) {
       await typing();
       await client.sendMessage(msg.from, mensagemOrcamento);
       session.etapa = "menu";
       return;
     }
 
-    if (gatilhosTaxa.some((item) => textoBusca.includes(item))) {
-      await typing();
-      await client.sendMessage(
-        msg.from,
-        "Me diga seu *bairro* para consultar a taxa e agilizar seu pedido."
-      );
-      session.etapa = "taxa";
-      return;
-    }
-
-    if (gatilhosHorario.some((item) => textoBusca.includes(item))) {
-      await typing();
-      const mensagemHorario = configData.horarioFuncionamento
-        ? `\n*Horário de funcionamento*\n\n${configData.horarioFuncionamento}\n\nEstamos esperando seu pedido!\n`
-        : "Horário de funcionamento não configurado no painel.";
-      await client.sendMessage(msg.from, mensagemHorario);
-      session.etapa = "menu";
-      return;
-    }
-
-    if (gatilhosEndereco.some((item) => textoBusca.includes(item))) {
+    if (!aiSempreAtivo && gatilhosEndereco.some((item) => texto.includes(item))) {
       await typing();
       const mensagemEndereco = configData.enderecoLoja
         ? `\n*Nosso Endereço*\n\n${configData.enderecoLoja}\n`
@@ -2714,32 +2281,10 @@ client.on("message", async (msg) => {
       return;
     }
 
-    if (gatilhosPagamento.some((item) => textoBusca.includes(item))) {
-      await typing();
-      await client.sendMessage(msg.from, mensagemPagamento);
-      session.etapa = "menu";
-      return;
-    }
-
-    if (gatilhosTempoEntrega.some((item) => textoBusca.includes(item))) {
-      await typing();
-      await client.sendMessage(msg.from, mensagemTempoEntrega);
-      session.etapa = "menu";
-      return;
-    }
-
-    if (gatilhosAtendente.some((item) => textoBusca.includes(item))) {
-      await typing();
-      await client.sendMessage(msg.from, mensagemAtendente);
-      session.pausadoAte = Date.now() + TEMPO_PAUSA_ATENDENTE_MS;
-      session.etapa = "menu";
-      return;
-    }
-
     // =====================================
     // AGRADECIMENTO
     // =====================================
-    if (gatilhosAgradecimento.some((item) => textoBusca.includes(item))) {
+    if (!aiSempreAtivo && gatilhosAgradecimento.some((item) => texto.includes(item))) {
 
       await typing();
       await client.sendMessage(msg.from, mensagemAgradecimento);
@@ -2750,7 +2295,7 @@ client.on("message", async (msg) => {
     // =====================================
     // CORDIALIDADE
     // =====================================
-    if (gatilhosCordialidade.some((item) => textoBusca.includes(item))) {
+    if (!aiSempreAtivo && gatilhosCordialidade.some((item) => texto.includes(item))) {
 
       await typing();
       await client.sendMessage(msg.from, mensagemCordialidade);
@@ -2761,7 +2306,7 @@ client.on("message", async (msg) => {
     // =====================================
     // CONFIRMACAO
     // =====================================
-    if (gatilhosConfirmacao.some((item) => textoBusca === item || textoBusca.includes(`${item} `) || textoBusca.endsWith(item))) {
+    if (!aiSempreAtivo && gatilhosConfirmacao.some((item) => texto === item || texto.includes(`${item} `) || texto.endsWith(item))) {
 
       await typing();
       await client.sendMessage(msg.from, mensagemConfirmacao);
@@ -2772,7 +2317,7 @@ client.on("message", async (msg) => {
     // =====================================
     // PEDIR DEPOIS
     // =====================================
-    if (gatilhosPosterior.some((item) => textoBusca.includes(item))) {
+    if (!aiSempreAtivo && gatilhosPosterior.some((item) => texto.includes(item))) {
 
       await typing();
       await client.sendMessage(msg.from, mensagemPosterior);
@@ -2783,7 +2328,7 @@ client.on("message", async (msg) => {
     // =====================================
     // DESPEDIDA
     // =====================================
-    if (gatilhosDespedida.some((item) => textoBusca.includes(item))) {
+    if (!aiSempreAtivo && gatilhosDespedida.some((item) => texto.includes(item))) {
 
       await typing();
       await client.sendMessage(msg.from, mensagemDespedida);
@@ -2792,26 +2337,9 @@ client.on("message", async (msg) => {
     }
 
     // =====================================
-    // SAUDACAO
+    // MENU OPÇÕES
     // =====================================
-    if (
-      gatilhosSaudacao.some((item) =>
-        item.includes(" ") ? textoBusca.startsWith(item) : palavrasTextoBusca.includes(item)
-      )
-    ) {
-      await typing();
-      await client.sendMessage(
-        msg.from,
-        montarMensagemSaudacao(obterSaudacaoPorTexto(textoBusca))
-      );
-      session.etapa = "menu";
-      return;
-    }
-
-    // =====================================
-    // MENU OPCOES
-    // =====================================
-    if (session.etapa === "menu") {
+    if (!aiSempreAtivo && session.etapa === "menu") {
 
       if (texto === "1") {
 
@@ -3064,11 +2592,17 @@ Ou digite *menu* para ver opções.`
 
   } catch (erro) {
 
-    console.log("ERRO:", erro);
+    console.log("âŒ ERRO:", erro);
 
   }
 
 });
+
+
+
+
+
+
 
 
 

@@ -40,6 +40,19 @@ const defaultSettings = {
     maxTokens: 600,
     systemPrompt: '',
   },
+  ifood: {
+    enabled: false,
+    integrationUrl: 'http://localhost:8787',
+    clientId: '',
+    clientSecret: '',
+    merchantId: '',
+    lastConnectionAt: '',
+    lastConnectionStatus: '',
+    lastConnectionMessage: '',
+    lastSyncAt: '',
+    lastSyncStatus: '',
+    lastSyncMessage: '',
+  },
   lastOrderNumber: 1000,
 };
 
@@ -53,6 +66,10 @@ const mergeSettings = (value = {}) => ({
   chatbotAi: {
     ...defaultSettings.chatbotAi,
     ...(value.chatbotAi || {}),
+  },
+  ifood: {
+    ...defaultSettings.ifood,
+    ...(value.ifood || {}),
   },
 });
 
@@ -368,6 +385,18 @@ export const saveChatbotAiSettings = async (userId, chatbotAi) => {
     chatbotAi: {
       ...settings.chatbotAi,
       ...(chatbotAi || {}),
+    },
+  });
+  return result;
+};
+
+export const saveIfoodSettings = async (userId, ifood) => {
+  const settings = getStoredSettings(userId);
+  const result = await saveSettings(userId, {
+    ...settings,
+    ifood: {
+      ...settings.ifood,
+      ...(ifood || {}),
     },
   });
   return result;

@@ -3,15 +3,15 @@ import { Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PaymentSummaryTable = ({ payments, onRemove, onEdit, subtotal = 0, discount = 0, surcharge = 0, total = 0 }) => {
-  
   const getMethodLabel = (method) => {
     const labels = {
       dinheiro: 'Dinheiro',
-      debito: 'Cartão Débito',
-      credito: 'Cartão Crédito',
+      debito: 'Cartao Debito',
+      credito: 'Cartao Credito',
       pix: 'Pix',
+      qrcode: 'QR Code',
       fiado: 'Fiado',
-      consumo: 'Consumo Interno'
+      consumo: 'Consumo Interno',
     };
     return labels[method] || method;
   };
@@ -22,6 +22,7 @@ const PaymentSummaryTable = ({ payments, onRemove, onEdit, subtotal = 0, discoun
       debito: '#8B5CF6',
       credito: '#F97316',
       pix: '#3B82F6',
+      qrcode: '#0EA5E9',
       fiado: '#FFA500',
       consumo: '#6B7280',
     };
@@ -30,13 +31,11 @@ const PaymentSummaryTable = ({ payments, onRemove, onEdit, subtotal = 0, discoun
 
   return (
     <div className="bg-[var(--layout-surface-2)] rounded-lg border border-[var(--layout-border)] overflow-hidden flex flex-col h-full">
-      
-      {/* Table Body - Payment List */}
       <div className="flex-1 overflow-y-auto max-h-[250px] custom-scrollbar">
         {payments.length === 0 ? (
           <div className="text-center py-8 text-[var(--layout-text-muted)] flex flex-col items-center justify-center h-full">
-             <span className="opacity-50 text-3xl mb-2">💸</span>
-             <span>Nenhum pagamento registrado</span>
+            <span className="opacity-50 text-3xl mb-2">$</span>
+            <span>Nenhum pagamento registrado</span>
           </div>
         ) : (
           <table className="w-full">
@@ -44,7 +43,7 @@ const PaymentSummaryTable = ({ payments, onRemove, onEdit, subtotal = 0, discoun
               <tr className="bg-[var(--layout-bg)] text-[var(--layout-text-muted)] text-xs uppercase sticky top-0 z-10">
                 <th className="py-2 px-4 text-left">Forma</th>
                 <th className="py-2 px-4 text-right">Valor</th>
-                <th className="py-2 px-4 text-center">Ações</th>
+                <th className="py-2 px-4 text-center">Acoes</th>
               </tr>
             </thead>
             <tbody>
@@ -57,14 +56,11 @@ const PaymentSummaryTable = ({ payments, onRemove, onEdit, subtotal = 0, discoun
                     exit={{ opacity: 0, x: 20 }}
                     className="border-t border-[var(--layout-border)] hover:bg-[var(--layout-bg)]/60 transition-colors"
                   >
-                    <td className="py-3 px-4 flex items-center gap-2">
-                      <div 
-                        className="w-2 h-2 rounded-full" 
-                        style={{ backgroundColor: getMethodColor(payment.method) }}
-                      />
-                      <span className="text-white font-medium text-sm">
-                        {getMethodLabel(payment.method)}
-                      </span>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getMethodColor(payment.method) }} />
+                        <span className="text-white font-medium text-sm">{getMethodLabel(payment.method)}</span>
+                      </div>
                     </td>
                     <td className="py-3 px-4 text-right text-[var(--layout-text-muted)] font-mono text-sm">
                       R$ {payment.value.toFixed(2)}
@@ -86,33 +82,31 @@ const PaymentSummaryTable = ({ payments, onRemove, onEdit, subtotal = 0, discoun
         )}
       </div>
 
-      {/* Summary Footer */}
       <div className="bg-[var(--layout-bg)] border-t border-[var(--layout-border)] p-4 space-y-1">
         <div className="flex justify-between text-sm">
           <span className="text-[var(--layout-text-muted)]">Subtotal:</span>
           <span className="text-[var(--layout-text-muted)]">R$ {subtotal.toFixed(2)}</span>
         </div>
-        
+
         {discount > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-red-400">Desconto:</span>
             <span className="text-red-400 font-medium">-R$ {discount.toFixed(2)}</span>
           </div>
         )}
-        
+
         {surcharge > 0 && (
           <div className="flex justify-between text-sm">
-            <span className="text-[var(--layout-accent)]">Acréscimo:</span>
+            <span className="text-[var(--layout-accent)]">Acrescimo:</span>
             <span className="text-[var(--layout-accent)] font-medium">+R$ {surcharge.toFixed(2)}</span>
           </div>
         )}
-        
+
         <div className="flex justify-between text-base font-bold pt-2 border-t border-[var(--layout-border)] mt-2">
           <span className="text-white">Total:</span>
           <span className="text-[var(--layout-accent)]">R$ {total.toFixed(2)}</span>
         </div>
       </div>
-
     </div>
   );
 };

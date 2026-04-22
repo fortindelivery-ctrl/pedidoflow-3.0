@@ -13,7 +13,7 @@ const RetiradaCaixaModal = ({ isOpen, onClose, caixaId, cashierName, currentBala
   const [motivo, setMotivo] = useState('Depósito Bancário');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [realTimeBalance, setRealTimeBalance] = useState(currentBalance);
-  const baseBalance = parseFloat(displayBalance ?? realTimeBalance ?? 0);
+  const baseBalance = parseFloat(realTimeBalance ?? currentBalance ?? 0);
   const previewBalance = baseBalance - (parseFloat(valor) || 0);
   
   const { addRetirada, getCaixaSaldo } = useCaixaMovimentacoes();
@@ -97,7 +97,7 @@ const RetiradaCaixaModal = ({ isOpen, onClose, caixaId, cashierName, currentBala
         {/* Balance Display */}
         <div className="px-6 py-4 bg-[#232f3e]">
            <span className="text-gray-400 text-xs uppercase block mb-1">Saldo do Dia</span>
-           <span className="text-2xl font-bold text-[#00d084]">R$ {parseFloat(displayBalance ?? realTimeBalance ?? 0).toFixed(2)}</span>
+           <span className="text-2xl font-bold text-[#00d084]">R$ {parseFloat(realTimeBalance ?? currentBalance ?? 0).toFixed(2)}</span>
         </div>
 
         {/* Form */}

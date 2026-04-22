@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
-  X, Banknote, CreditCard, Smartphone, User, Receipt,
-  Calculator, AlertCircle, DollarSign, Users, CheckCircle2,
+  X, Banknote, CreditCard, Smartphone, QrCode, User, Receipt,
+  Calculator, AlertCircle, DollarSign, CheckCircle2,
   Search, Loader2, Briefcase
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePaymentCalculations } from '@/hooks/usePaymentCalculations';
-import { validatePaymentWithClient, validateDeliveryData } from '@/hooks/usePaymentCalculations';
+import { usePaymentCalculations, validatePaymentWithClient, validateDeliveryData } from '@/hooks/usePaymentCalculations';
 import { validateRemainingValue, validateClientExists, buildDeliveryAddress } from '@/utils/paymentValidation';
 import { validateComboInsumoStock } from '@/utils/validateComboInsumoStock';
 import PaymentMethodCard from '@/components/PaymentMethodCard';
@@ -132,7 +131,7 @@ const PaymentModal = ({
     if (methodId === 'fiado') {
       if (!validateClientExists(clients)) {
         toast({
-          title: "Ação Indisponível",
+          title: "AÃ§Ã£o IndisponÃ­vel",
           description: "Cadastre um cliente para usar o pagamento Fiado.",
           variant: "destructive"
         });
@@ -156,7 +155,7 @@ const PaymentModal = ({
   const handleAddPayment = () => {
     const value = parseFloat(currentInputValue);
     if (!value || value <= 0) {
-      toast({ title: "Valor Inválido", description: "O valor do pagamento deve ser maior que zero.", variant: "destructive" });
+      toast({ title: "Valor InvÃ¡lido", description: "O valor do pagamento deve ser maior que zero.", variant: "destructive" });
       return;
     }
 
@@ -179,7 +178,7 @@ const PaymentModal = ({
   // --- INTERNAL SAVE LOGIC ---
   const executeSave = async (finalData) => {
     try {
-      if (!user) throw new Error("Usuário não autenticado");
+      if (!user) throw new Error("UsuÃ¡rio nÃ£o autenticado");
 
       // 0. Pre-validate Combo Insumo Stocks to prevent overselling BEFORE inserting Venda
       const productIds = saleData.items.map(i => i.id || i.produtoId);
@@ -205,7 +204,7 @@ const PaymentModal = ({
         .limit(1)
         .maybeSingle();
 
-      if (lastSaleError) throw new Error(`Erro ao gerar número da venda: ${lastSaleError.message}`);
+      if (lastSaleError) throw new Error(`Erro ao gerar nÃºmero da venda: ${lastSaleError.message}`);
       const numeroVenda = (Number(lastSale?.numero_venda) || 0) + 1;
 
       // 2. Insert Venda
@@ -316,7 +315,7 @@ const PaymentModal = ({
           const { error: contaError } = await supabase.from('contas_receber').insert(contasToInsert);
           if (contaError) {
             console.error("Critical: Failed to create contas_receber record", contaError);
-            toast({ title: "Atenção", description: "Venda salva, mas houve erro ao gerar conta a receber.", variant: "warning" });
+            toast({ title: "AtenÃ§Ã£o", description: "Venda salva, mas houve erro ao gerar conta a receber.", variant: "warning" });
           }
         }
       }
@@ -342,7 +341,7 @@ const PaymentModal = ({
 
     const clientValidation = validatePaymentWithClient(payments, selectedClient);
     if (!clientValidation.valid) {
-      toast({ title: "Cliente Necessário", description: clientValidation.error, variant: "destructive" });
+      toast({ title: "Cliente NecessÃ¡rio", description: clientValidation.error, variant: "destructive" });
       return;
     }
 
@@ -350,7 +349,7 @@ const PaymentModal = ({
       const { isValid, errors } = validateDeliveryData(saleType, deliveryData.motoboy_id, deliveryData.endereco, deliveryData.numero, deliveryData.bairro);
       if (!isValid) {
         setDeliveryErrors(errors);
-        toast({ title: "Dados de Entrega", description: "Preencha todos os campos obrigatórios.", variant: "destructive" });
+        toast({ title: "Dados de Entrega", description: "Preencha todos os campos obrigatÃ³rios.", variant: "destructive" });
         return;
       }
     }
@@ -362,7 +361,7 @@ const PaymentModal = ({
         const sum = payers.reduce((s, p) => s + (parseFloat(p.value) || 0), 0);
         const diff = Math.abs(sum - total);
         if (diff > 0.05) {
-          toast({ title: 'Divisão inválida', description: `Soma dos valores divididos difere do total.`, variant: 'destructive' });
+          toast({ title: 'DivisÃ£o invÃ¡lida', description: `Soma dos valores divididos difere do total.`, variant: 'destructive' });
           setIsProcessing(false);
           return;
         }
@@ -405,9 +404,10 @@ const PaymentModal = ({
 
   const paymentMethods = [
     { id: 'dinheiro', label: 'Dinheiro', icon: Banknote, color: 'var(--layout-accent)' },
-    { id: 'pix', label: 'PIX', icon: Smartphone, color: '#3B82F6' },
-    { id: 'debito', label: 'Débito', icon: CreditCard, color: '#8B5CF6' },
-    { id: 'credito', label: 'Crédito', icon: CreditCard, color: '#F97316' },
+    { id: 'pix', label: 'Chave Pix', icon: Smartphone, color: '#3B82F6' },
+    { id: 'qrcode', label: 'QR Code', icon: QrCode, color: '#0EA5E9' },
+    { id: 'debito', label: 'Debito', icon: CreditCard, color: '#8B5CF6' },
+    { id: 'credito', label: 'Credito', icon: CreditCard, color: '#F97316' },
     { id: 'fiado', label: 'Fiado', icon: User, color: '#FFA500', disabled: !validateClientExists(clients) },
     { id: 'consumo', label: 'Consumo', icon: Receipt, color: '#6B7280' },
   ];
@@ -463,7 +463,7 @@ const PaymentModal = ({
                 </div>
               </div>
               <div className="bg-[var(--layout-surface-2)] p-4 rounded-xl border border-[var(--layout-border)]">
-                <span className="text-[var(--layout-text-muted)] text-xs uppercase tracking-wider block mb-1">Acréscimo (R$)</span>
+                <span className="text-[var(--layout-text-muted)] text-xs uppercase tracking-wider block mb-1">AcrÃ©scimo (R$)</span>
                 <div className="flex items-center gap-2">
                   <span className="text-[var(--layout-text-muted)] text-lg font-bold">R$</span>
                   <input type="number" min="0" step="0.01" placeholder="0,00" value={surcharge === 0 ? '' : surcharge} onChange={(e) => setSurcharge(parseFloat(e.target.value) || 0)} className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded px-3 py-2 text-[var(--layout-accent)] font-bold focus:border-[var(--layout-accent)] focus:outline-none" />
@@ -534,6 +534,7 @@ const PaymentModal = ({
                 ))}
               </div>
             </section>
+
           </div>
 
           <div className="lg:col-span-5 flex flex-col h-full space-y-6">
@@ -591,7 +592,7 @@ const PaymentModal = ({
                           {paymentMethods.map(pm => <option key={pm.id} value={pm.id}>{pm.label}</option>)}
                         </select>
                         <input type="number" min="0" step="0.01" value={p.value} onChange={(e) => setPayers(prev => prev.map(x => x.id === p.id ? { ...x, value: e.target.value } : x))} className="col-span-3 bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded px-3 py-2 text-white" />
-                        <div className="col-span-1 text-right"><button onClick={() => setPayers(prev => prev.filter(x => x.id !== p.id))} className="text-red-400 px-2">✕</button></div>
+                        <div className="col-span-1 text-right"><button onClick={() => setPayers(prev => prev.filter(x => x.id !== p.id))} className="text-red-400 px-2">âœ•</button></div>
                       </div>
                     ))}
                     <div className="flex justify-between">

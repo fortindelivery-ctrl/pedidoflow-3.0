@@ -21,6 +21,7 @@ export const useContasAReceber = () => {
     const clean = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (clean.includes('dinheiro')) return 'dinheiro';
     if (clean.includes('pix')) return 'pix';
+    if (clean.includes('qrcode') || clean.includes('qr code') || clean === 'qr' || clean.includes('qr_')) return 'qrcode';
     if (clean.includes('debito')) return 'debito';
     if (clean.includes('credito')) return 'credito';
     if (clean.includes('fiado')) return 'fiado';

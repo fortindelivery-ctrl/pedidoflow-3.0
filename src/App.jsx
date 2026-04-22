@@ -19,6 +19,7 @@ import HistoricoVendasPage from '@/pages/HistoricoVendasPage';
 import CaixaHistoricoPage from '@/pages/CaixaHistoricoPage';
 import ChatbotApiPage from '@/pages/ChatbotApiPage';
 import TemaLayoutPage from '@/pages/TemaLayoutPage';
+import Ifood99Page from '@/pages/Ifood99Page';
 
 // Import new components to ensure they are available in build
 import SuprimentoCaixaModal from '@/components/SuprimentoCaixaModal';
@@ -56,6 +57,7 @@ function App() {
             <Route path="relatorios/historico-vendas" element={<HistoricoVendasPage />} />
             <Route path="relatorios/caixa" element={<CaixaHistoricoPage />} />
             <Route path="chatbot" element={<ChatbotApiPage />} />
+            <Route path="ifood-99" element={<Ifood99Page />} />
             <Route path="cores-layout" element={<TemaLayoutPage />} />
           </Route>
 

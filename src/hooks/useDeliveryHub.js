@@ -12,6 +12,7 @@ import {
   getDeliverySummaries,
   reserveOrderStock,
   saveChatbotAiSettings,
+  saveIfoodSettings,
   saveAppSettings,
   saveBairrosEntrega,
   syncDeliverySnapshot,
@@ -105,6 +106,10 @@ export const useDeliveryHub = () => {
     },
     saveChatbotAiSettings: async (chatbotAi) => {
       await saveChatbotAiSettings(user.id, chatbotAi);
+      await loadSnapshot();
+    },
+    saveIfoodSettings: async (ifood) => {
+      await saveIfoodSettings(user.id, ifood);
       await loadSnapshot();
     },
     createDeliveryOrder: async (payload) => {
