@@ -153,7 +153,7 @@ const ContasApagarPage = () => {
   const handleMarkAsPaid = async (conta) => {
     try {
       const now = new Date().toISOString();
-      const valor = parseFloat(conta.valor) || 0;
+      const valor = Number(conta.valor) || 0;
       if (valor <= 0) {
         toast({
           title: 'Valor invalido',
@@ -162,31 +162,38 @@ const ContasApagarPage = () => {
         });
         return;
       }
+
       const caixa = await getTargetCaixa();
-      if (!caixa) {
-        toast({
-          title: 'Caixa fechado',
-          description: 'Abra o caixa para registrar essa saida.',
-          variant: 'destructive'
-        });
-        return;
-      }
-      const saldoAnterior = parseFloat(caixa.saldo_atual || 0);
-      if (saldoAnterior < valor) {
-        toast({
-          title: 'Saldo insuficiente',
-          description: `Saldo atual: R$ ${saldoAnterior.toFixed(2)}. Valor da conta: R$ ${valor.toFixed(2)}.`,
-          variant: 'destructive'
-        });
-        return;
-      }
+      const saldoAnterior = Number(caixa?.saldo_atual || 0);
+      const semBaixaNoCaixa = !caixa || saldoAnterior < valor;
       const saldoNovo = saldoAnterior - valor;
+
+      const updatePayload = { status: 'pago', data_pagamento: now };
+      if (semBaixaNoCaixa) {
+        const motivoSemBaixa = !caixa
+          ? 'Caixa fechado'
+          : `Saldo insuficiente (saldo: R$ ${saldoAnterior.toFixed(2)}, valor: R$ ${valor.toFixed(2)})`;
+        const nota = `[${now}] Pago sem baixa no caixa - ${motivoSemBaixa}.`;
+        updatePayload.observacoes = conta?.observacoes ? `${conta.observacoes} | ${nota}` : nota;
+      }
+
       const { error: updateError } = await supabase
         .from('contas_pagar')
-        .update({ status: 'pago', data_pagamento: now })
+        .update(updatePayload)
         .eq('id', conta.id);
       if (updateError) throw updateError;
-      const { error: moveError } = await supabase.from('caixa_movimentos').insert([{
+
+      if (semBaixaNoCaixa) {
+        const descricaoSemBaixa = !caixa
+          ? 'Conta marcada como paga. Caixa fechado, sem baixa no caixa.'
+          : `Conta marcada como paga sem baixa no caixa. Saldo atual: R$ ${saldoAnterior.toFixed(2)}.`;
+        toast({ title: 'Conta marcada como paga', description: descricaoSemBaixa });
+        return;
+      }
+
+      const { data: moveInserted, error: moveError } = await supabase
+        .from('caixa_movimentos')
+        .insert([{
         user_id: user.id,
         caixa_id: caixa.id,
         tipo: 'retirada',
@@ -196,8 +203,11 @@ const ContasApagarPage = () => {
         saldo_anterior: saldoAnterior,
         saldo_novo: saldoNovo,
         data_movimentacao: now
-      }]);
+        }])
+        .select('id')
+        .single();
       if (moveError) throw moveError;
+
       const { error: rpcError } = await supabase.rpc('decrement_caixa_saldo', {
         p_caixa_id: caixa.id,
         p_valor: valor,
@@ -211,9 +221,21 @@ const ContasApagarPage = () => {
           msg.includes('check_caixa_saldo_positivo') ||
           details.includes('check_caixa_saldo_positivo');
         if (checkSaldoError) {
-          throw new Error(
-            `Saldo insuficiente para registrar a saida. Saldo atual: R$ ${saldoAnterior.toFixed(2)}.`
-          );
+          if (moveInserted?.id) {
+            await supabase.from('caixa_movimentos').delete().eq('id', moveInserted.id);
+          }
+
+          const nota = `[${now}] Pago sem baixa no caixa - Saldo insuficiente em concorrencia (saldo: R$ ${saldoAnterior.toFixed(2)}, valor: R$ ${valor.toFixed(2)}).`;
+          await supabase
+            .from('contas_pagar')
+            .update({ observacoes: conta?.observacoes ? `${conta.observacoes} | ${nota}` : nota })
+            .eq('id', conta.id);
+
+          toast({
+            title: 'Conta marcada como paga',
+            description: `Sem baixa no caixa por saldo insuficiente. Saldo: R$ ${saldoAnterior.toFixed(2)}.`,
+          });
+          return;
         }
         const { error: updateCaixaError } = await supabase
           .from('caixas')
