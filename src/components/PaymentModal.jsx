@@ -18,6 +18,58 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCombos } from '@/hooks/useCombos';
 
+const normalizePaymentMethod = (value = '') => {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) return '';
+  const clean = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (clean.includes('dinheiro')) return 'dinheiro';
+  if (clean.includes('pix')) return 'pix';
+  if (clean.includes('qrcode') || clean.includes('qr code') || clean === 'qr' || clean.includes('qr_')) return 'qrcode';
+  if (clean.includes('debito')) return 'debito';
+  if (clean.includes('credito')) return 'credito';
+  if (clean.includes('fiado')) return 'fiado';
+  if (clean.includes('consumo')) return 'consumo';
+  if (clean.includes('cartao_debito') || clean.includes('cartao debito')) return 'debito';
+  if (clean.includes('cartao_credito') || clean.includes('cartao credito')) return 'credito';
+  return clean;
+};
+
+const paymentMethodCandidates = {
+  dinheiro: ['dinheiro', 'Dinheiro'],
+  pix: ['pix', 'PIX', 'Pix'],
+  qrcode: ['qrcode', 'qr_code', 'QR Code', 'pix', 'PIX'],
+  debito: ['debito', 'cartao_debito', 'Débito', 'Debito'],
+  credito: ['credito', 'cartao_credito', 'Crédito', 'Credito'],
+  fiado: ['fiado', 'Fiado'],
+  consumo: ['consumo', 'Consumo', 'dinheiro'],
+};
+
+const isPaymentConstraintError = (error) => {
+  if (!error) return false;
+  const message = String(error?.message || '').toLowerCase();
+  const details = String(error?.details || '').toLowerCase();
+  return (
+    String(error?.code || '') === '23514' ||
+    message.includes('venda_pagamentos_forma_pagamento_check') ||
+    details.includes('venda_pagamentos_forma_pagamento_check') ||
+    message.includes('violates check constraint')
+  );
+};
+
+const buildPaymentRecordsForAttempt = (payments = [], userId, vendaId, attempt = 0) =>
+  payments.map((p) => {
+    const normalized = normalizePaymentMethod(p?.method || '');
+    const candidates = paymentMethodCandidates[normalized] || [normalized || 'dinheiro'];
+    const selected = candidates[Math.min(attempt, candidates.length - 1)];
+    return {
+      user_id: userId,
+      venda_id: vendaId,
+      forma_pagamento: selected,
+      valor: p.value,
+      data_pagamento: new Date().toISOString(),
+    };
+  });
+
 const PaymentModal = ({
   isOpen,
   onClose,
@@ -300,15 +352,24 @@ const PaymentModal = ({
 
       // 4. Insert Payments
       if (finalData.payments && finalData.payments.length > 0) {
-        const pagamentosToInsert = finalData.payments.map(p => ({
-          user_id: user.id,
-          venda_id: venda.id,
-          forma_pagamento: p.method,
-          valor: p.value,
-          data_pagamento: new Date().toISOString()
-        }));
+        let payError = null;
+        const maxAttempts = 4;
 
-        const { error: payError } = await supabase.from('venda_pagamentos').insert(pagamentosToInsert);
+        for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+          const pagamentosToInsert = buildPaymentRecordsForAttempt(
+            finalData.payments,
+            user.id,
+            venda.id,
+            attempt
+          );
+
+          const insertResult = await supabase.from('venda_pagamentos').insert(pagamentosToInsert);
+          payError = insertResult.error || null;
+
+          if (!payError) break;
+          if (!isPaymentConstraintError(payError)) break;
+        }
+
         if (payError) throw new Error(`Erro ao salvar pagamentos: ${payError.message}`);
 
         // 5. Handle "Fiado"
