@@ -576,6 +576,99 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+const frontendDistPath = path.join(__dirname, "dist");
+const frontendIndexPath = path.join(frontendDistPath, "index.html");
+const frontendMimeTypes = {
+  ".css": "text/css; charset=utf-8",
+  ".gif": "image/gif",
+  ".html": "text/html; charset=utf-8",
+  ".ico": "image/x-icon",
+  ".jpeg": "image/jpeg",
+  ".jpg": "image/jpeg",
+  ".js": "application/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".map": "application/json; charset=utf-8",
+  ".mp3": "audio/mpeg",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".wav": "audio/wav",
+  ".webp": "image/webp",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+};
+
+const getBotStatusPayload = () => {
+  const status = ultimoQr ? "qr_disponivel" : botConectado ? "conectado" : "aguardando_qr";
+  return {
+    status,
+    qrPagePath: "/qr",
+    qrImagePath: "/qr.png",
+    updatedAt: qrAtualizadoEm,
+  };
+};
+
+const sendBotStatus = (res) => {
+  res.writeHead(200, {
+    ...headersSemCache,
+    ...corsHeaders,
+    "Content-Type": "application/json; charset=utf-8",
+  });
+  res.end(JSON.stringify(getBotStatusPayload()));
+};
+
+const frontendIndexDisponivel = () => fs.existsSync(frontendIndexPath);
+
+const resolverArquivoFrontend = (requestPath) => {
+  if (!frontendIndexDisponivel()) return null;
+  const rota = String(requestPath || "/");
+  const relativo = rota === "/" ? "index.html" : rota.replace(/^\/+/, "");
+  const normalizado = path.normalize(relativo);
+  const absoluto = path.join(frontendDistPath, normalizado);
+  const relativoDaRaiz = path.relative(frontendDistPath, absoluto);
+
+  if (relativoDaRaiz.startsWith("..") || path.isAbsolute(relativoDaRaiz)) return null;
+  if (!fs.existsSync(absoluto)) return null;
+  if (!fs.statSync(absoluto).isFile()) return null;
+  return absoluto;
+};
+
+const sendFrontendFile = (res, filePath, { headOnly = false } = {}) => {
+  try {
+    const ext = path.extname(filePath).toLowerCase();
+    const contentType = frontendMimeTypes[ext] || "application/octet-stream";
+    const isHtml = ext === ".html";
+    const cacheHeaders = isHtml
+      ? headersSemCache
+      : {
+          "Cache-Control": "public, max-age=31536000, immutable",
+        };
+    const data = fs.readFileSync(filePath);
+    res.writeHead(200, {
+      ...cacheHeaders,
+      ...corsHeaders,
+      "Content-Type": contentType,
+      "Content-Length": data.length,
+    });
+    if (!headOnly) {
+      res.end(data);
+      return;
+    }
+    res.end();
+  } catch (erro) {
+    res.writeHead(500, {
+      ...headersSemCache,
+      ...corsHeaders,
+      "Content-Type": "application/json; charset=utf-8",
+    });
+    res.end(
+      JSON.stringify({
+        status: "error",
+        message: "Falha ao carregar o frontend.",
+      })
+    );
+  }
+};
+
 const servidor = http.createServer((req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || "localhost"}`);
   const requestPath = requestUrl.pathname;
@@ -991,14 +1084,32 @@ const servidor = http.createServer((req, res) => {
     return;
   }
 
-  const status = ultimoQr ? "qr_disponivel" : botConectado ? "conectado" : "aguardando_qr";
+  if (requestPath === "/status") {
+    sendBotStatus(res);
+    return;
+  }
 
-  res.writeHead(200, {
-    ...headersSemCache,
-    ...corsHeaders,
-    "Content-Type": "application/json; charset=utf-8",
-  });
-  res.end(JSON.stringify({ status, qrPagePath: "/qr", qrImagePath: "/qr.png", updatedAt: qrAtualizadoEm }));
+  if ((req.method === "GET" || req.method === "HEAD") && frontendIndexDisponivel()) {
+    let decodedPath = requestPath;
+    try {
+      decodedPath = decodeURIComponent(requestPath);
+    } catch {
+      decodedPath = requestPath;
+    }
+
+    const arquivo = resolverArquivoFrontend(decodedPath);
+    if (arquivo) {
+      sendFrontendFile(res, arquivo, { headOnly: req.method === "HEAD" });
+      return;
+    }
+
+    if (!path.extname(decodedPath)) {
+      sendFrontendFile(res, frontendIndexPath, { headOnly: req.method === "HEAD" });
+      return;
+    }
+  }
+
+  sendBotStatus(res);
 });
 
 const iniciarServidor = (portaInicial) => {

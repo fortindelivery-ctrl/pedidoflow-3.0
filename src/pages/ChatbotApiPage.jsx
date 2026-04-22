@@ -193,7 +193,10 @@ const ChatbotApiPage = () => {
   const [aiDirty, setAiDirty] = useState(false);
   const [aiDraft, setAiDraft] = useState(() => buildAiDefaults(snapshot.settings?.chatbotAi || {}));
   const [botBaseUrl, setBotBaseUrl] = useState(() => {
-    return window.localStorage.getItem('fortin_whatsapp_bot_url') || 'http://localhost:3333';
+    const savedUrl = window.localStorage.getItem('fortin_whatsapp_bot_url');
+    if (savedUrl) return savedUrl;
+    if (window.location?.origin) return window.location.origin;
+    return 'http://localhost:3333';
   });
   const [botQrNonce, setBotQrNonce] = useState(Date.now());
   const [syncStatus, setSyncStatus] = useState('');
@@ -513,11 +516,19 @@ const ChatbotApiPage = () => {
 
   const fetchBotStatus = async () => {
     if (!normalizedBotBaseUrl) return null;
-    const response = await fetch(normalizedBotBaseUrl);
+    let response = await fetch(`${normalizedBotBaseUrl}/status`);
+    if (!response.ok) {
+      response = await fetch(normalizedBotBaseUrl);
+    }
     if (!response.ok) {
       throw new Error(`Falha ao ler status (${response.status}).`);
     }
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error('Resposta de status invalida.');
+    }
     const status = typeof data?.status === 'string' ? data.status : '';
     setBotStatus(status);
     setBotOnline(status ? status === 'conectado' : null);
