@@ -31,15 +31,12 @@ const EditSaleModal = ({ isOpen, onClose, sale, onSave }) => {
   const fetchVendedores = async () => {
     try {
       const { data } = await supabase
-        .from('funcionarios')
-        .select('id, nome, status')
+        .from('vendedores')
+        .select('id, nome, ativo')
         .eq('user_id', user.id)
         .order('nome', { ascending: true });
 
-      const ativos = (data || []).filter((item) => {
-        const status = String(item?.status || '').trim().toLowerCase();
-        return status === '' || status === 'ativo';
-      });
+      const ativos = (data || []).filter((item) => item?.ativo !== false);
 
       setVendedores(ativos.map((item) => ({ id: item.id, nome: item.nome })));
     } catch (error) {

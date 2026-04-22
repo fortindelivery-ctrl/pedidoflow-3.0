@@ -180,6 +180,23 @@ const PaymentModal = ({
     try {
       if (!user) throw new Error("UsuÃ¡rio nÃ£o autenticado");
 
+      let vendedorId = finalData.vendedor_id ? String(finalData.vendedor_id).trim() : null;
+      if (vendedorId) {
+        const { data: vendedorValido, error: vendedorLookupError } = await supabase
+          .from('vendedores')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('id', vendedorId)
+          .maybeSingle();
+
+        if (vendedorLookupError) {
+          console.warn('Falha ao validar vendedor_id. Ignorando vendedor para evitar erro de FK.', vendedorLookupError);
+          vendedorId = null;
+        } else if (!vendedorValido) {
+          vendedorId = null;
+        }
+      }
+
       // 0. Pre-validate Combo Insumo Stocks to prevent overselling BEFORE inserting Venda
       const productIds = saleData.items.map(i => i.id || i.produtoId);
       const { data: prodTypes, error: prodError } = await supabase.from('produtos').select('id,tipo').in('id', productIds).eq('user_id', user.id);
@@ -222,7 +239,7 @@ const PaymentModal = ({
           tipo_venda: finalData.tipo_venda,
           status: 'concluido',
           cliente_id: finalData.selectedClient?.id || null,
-          vendedor_id: finalData.vendedor_id || null,
+          vendedor_id: vendedorId,
           motoboy_id: finalData.motoboy_id || null,
           endereco_entrega: finalData.endereco_entrega || null,
           observacoes_entrega: finalData.observacoes_entrega || null,

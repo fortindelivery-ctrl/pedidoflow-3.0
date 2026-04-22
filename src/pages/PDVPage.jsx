@@ -80,6 +80,14 @@ const PDVPage = () => {
   const isCashierOpen = !!cashierSession;
   const currentEmployee = cashierSession?.funcionario;
   const [activeCaixaId, setActiveCaixaId] = useState(null);
+  const defaultSellerId = useMemo(() => {
+    const employeeName = String(currentEmployee?.nome || '').trim().toLowerCase();
+    if (!employeeName) return null;
+    const matched = (vendedores || []).find(
+      (item) => String(item?.nome || '').trim().toLowerCase() === employeeName
+    );
+    return matched?.id || null;
+  }, [currentEmployee?.nome, vendedores]);
 
   const toggleBalanceVisibility = () => setShowBalance(!showBalance);
 
@@ -266,19 +274,17 @@ const PDVPage = () => {
   const loadVendedores = async () => {
     try {
       const { data } = await supabase
-        .from('funcionarios')
-        .select('id,nome,status')
+        .from('vendedores')
+        .select('id,nome,ativo')
         .eq('user_id', user.id)
         .order('nome', { ascending: true });
 
-      const ativos = (data || []).filter((item) => {
-        const status = String(item?.status || '').trim().toLowerCase();
-        return status === '' || status === 'ativo';
-      });
+      const ativos = (data || []).filter((item) => item?.ativo !== false);
 
       setVendedores(ativos.map((item) => ({ id: item.id, nome: item.nome })));
     } catch (e) {
-      console.error(e);
+      console.error('Erro ao carregar vendedores ativos:', e);
+      setVendedores([]);
     }
   };
 
@@ -975,7 +981,7 @@ const PDVPage = () => {
         onConfirm={handlePaymentConfirm} 
         motoboys={motoboys}
         sellers={vendedores}
-        defaultSellerId={cashierSession?.funcionario_id}
+        defaultSellerId={defaultSellerId}
       />
       <CashSummaryModal isOpen={showCashSummary} onClose={() => setShowCashSummary(false)} caixaId={activeCaixaId} />
       <OpenCashierModal isOpen={showOpenCashier} onClose={() => setShowOpenCashier(false)} onConfirm={handleOpenCashier} />
