@@ -34,8 +34,20 @@ let cacheWwebPreparado = false;
 let aiGeminiBloqueada = false;
 let geminiModeloAtivo = null;
 
-const authDataPath = path.join(__dirname, ".wwebjs_auth");
-const cacheDataPath = path.join(__dirname, ".wwebjs_cache");
+const resolveWwebDataBasePath = () => {
+  const fromEnv = String(
+    process.env.WWEB_DATA_PATH || process.env.RAILWAY_VOLUME_MOUNT_PATH || ""
+  ).trim();
+  if (fromEnv) return fromEnv;
+  const railwayDataPath = "/data";
+  if (process.platform !== "win32" && fs.existsSync(railwayDataPath)) {
+    return railwayDataPath;
+  }
+  return __dirname;
+};
+const wwebDataBasePath = resolveWwebDataBasePath();
+const authDataPath = path.join(wwebDataBasePath, ".wwebjs_auth");
+const cacheDataPath = path.join(wwebDataBasePath, ".wwebjs_cache");
 const AUTO_LIMPAR_SESSAO = process.env.WPP_AUTO_CLEAR_SESSION !== "0";
 const AUTO_REINICIAR_EM_FALHA = process.env.WPP_AUTO_RESTART_ON_FAIL !== "0";
 const WWEB_CACHE_TYPE =
@@ -46,6 +58,7 @@ const USER_AGENT =
   process.env.WEB_USER_AGENT ||
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 const WWEB_VERSION = process.env.WWEB_VERSION || DefaultOptions.webVersion;
+console.log(`WhatsApp session data path: ${wwebDataBasePath}`);
 
 const escapeHtml = (valor = "") =>
   valor
