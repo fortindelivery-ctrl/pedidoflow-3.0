@@ -102,18 +102,7 @@ const ContasApagarPage = () => {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-
-    if (openCaixa) return openCaixa;
-
-    const { data: latestCaixa } = await supabase
-      .from('caixas')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    return latestCaixa || null;
+    return openCaixa || null;
   };
 
   const handleSubmit = async (e) => {
@@ -165,31 +154,38 @@ const ContasApagarPage = () => {
     try {
       const now = new Date().toISOString();
       const valor = parseFloat(conta.valor) || 0;
-
+      if (valor <= 0) {
+        toast({
+          title: 'Valor invalido',
+          description: 'A conta deve ter valor maior que zero para ser marcada como paga.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      const caixa = await getTargetCaixa();
+      if (!caixa) {
+        toast({
+          title: 'Caixa fechado',
+          description: 'Abra o caixa para registrar essa saida.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      const saldoAnterior = parseFloat(caixa.saldo_atual || 0);
+      if (saldoAnterior < valor) {
+        toast({
+          title: 'Saldo insuficiente',
+          description: `Saldo atual: R$ ${saldoAnterior.toFixed(2)}. Valor da conta: R$ ${valor.toFixed(2)}.`,
+          variant: 'destructive'
+        });
+        return;
+      }
+      const saldoNovo = saldoAnterior - valor;
       const { error: updateError } = await supabase
         .from('contas_pagar')
         .update({ status: 'pago', data_pagamento: now })
         .eq('id', conta.id);
       if (updateError) throw updateError;
-
-      const caixa = await getTargetCaixa();
-      if (!caixa) {
-        await supabase
-          .from('contas_pagar')
-          .update({ status: 'pendente', data_pagamento: null })
-          .eq('id', conta.id);
-
-        toast({
-          title: 'Caixa não encontrado',
-          description: 'Não foi possível localizar um caixa para registrar a saída.',
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      const saldoAnterior = parseFloat(caixa.saldo_atual || 0);
-      const saldoNovo = saldoAnterior - valor;
-
       const { error: moveError } = await supabase.from('caixa_movimentos').insert([{
         user_id: user.id,
         caixa_id: caixa.id,
@@ -201,16 +197,24 @@ const ContasApagarPage = () => {
         saldo_novo: saldoNovo,
         data_movimentacao: now
       }]);
-
       if (moveError) throw moveError;
-
       const { error: rpcError } = await supabase.rpc('decrement_caixa_saldo', {
         p_caixa_id: caixa.id,
         p_valor: valor,
         p_tipo: 'retirada'
       });
-
       if (rpcError) {
+        const msg = String(rpcError?.message || '').toLowerCase();
+        const details = String(rpcError?.details || '').toLowerCase();
+        const checkSaldoError =
+          String(rpcError?.code || '') === '23514' ||
+          msg.includes('check_caixa_saldo_positivo') ||
+          details.includes('check_caixa_saldo_positivo');
+        if (checkSaldoError) {
+          throw new Error(
+            `Saldo insuficiente para registrar a saida. Saldo atual: R$ ${saldoAnterior.toFixed(2)}.`
+          );
+        }
         const { error: updateCaixaError } = await supabase
           .from('caixas')
           .update({
@@ -220,7 +224,6 @@ const ContasApagarPage = () => {
           .eq('id', caixa.id);
         if (updateCaixaError) throw updateCaixaError;
       }
-
       toast({ title: 'Conta marcada como paga e caixa atualizado!' });
     } catch (error) {
       await supabase
@@ -559,6 +562,7 @@ const ContasApagarPage = () => {
 };
 
 export default ContasApagarPage;
+
 
 
 
