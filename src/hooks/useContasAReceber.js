@@ -113,7 +113,16 @@ export const useContasAReceber = () => {
         .select(`
           *,
           cliente:pessoas(id, nome, cpf, telefone),
-          venda:vendas(numero_venda, total, data_hora)
+          venda:vendas(
+            id,
+            numero_venda,
+            total,
+            data_hora,
+            itens:itens_venda(
+              quantidade,
+              produto:produtos(descricao)
+            )
+          )
         `)
         .eq('user_id', user.id)
         .order('data_vencimento', { ascending: true });

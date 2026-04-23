@@ -47,6 +47,19 @@ const ContasAReceberTable = ({
     return 0;
   });
 
+  const getItensResumo = (item) => {
+    const itens = item?.venda?.itens;
+    if (!Array.isArray(itens) || itens.length === 0) return [];
+    return itens
+      .map((it) => {
+        const qtd = Number(it?.quantidade || 0);
+        const nome = String(it?.produto?.descricao || '').trim();
+        if (!nome) return null;
+        return `${qtd > 0 ? `${qtd}x ` : ''}${nome}`;
+      })
+      .filter(Boolean);
+  };
+
   const selectableIds = sortedData.filter((item) => item.status !== 'pago').map((item) => item.id);
   const isAllSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
   const isSomeSelected = selectableIds.some((id) => selectedIds.has(id));
@@ -117,6 +130,7 @@ const ContasAReceberTable = ({
           {sortedData.map((item) => {
              const isOverdue = item.status !== 'pago' && item.data_vencimento < new Date().toISOString().split('T')[0];
              const isSelectable = item.status !== 'pago';
+             const itensResumo = getItensResumo(item);
              
              return (
               <tr key={item.id} className="hover:bg-[var(--layout-surface-2)] transition-colors group">
@@ -141,6 +155,15 @@ const ContasAReceberTable = ({
                 <td className="p-4">
                   <div className="font-medium text-white">{item.cliente?.nome || 'Cliente Desconhecido'}</div>
                   {item.cliente?.cpf && <div className="text-xs text-[var(--layout-text-muted)]">{item.cliente.cpf}</div>}
+                  {itensResumo.length > 0 && (
+                    <div className="mt-1 space-y-0.5">
+                      {itensResumo.map((desc, idx) => (
+                        <div key={`${item.id}-produto-${idx}`} className="text-xs text-[var(--layout-text-muted)]">
+                          {desc}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </td>
                 <td className="p-4 text-right font-bold text-[var(--layout-text-muted)]">
                   R$ {parseFloat(item.valor).toFixed(2)}
