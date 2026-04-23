@@ -93,6 +93,56 @@ const CloseCashierModal = ({ isOpen, onClose, onConfirm, session }) => {
         paymentsBase[key] += valor;
       });
 
+      // Fiado aparece apenas visualmente no fechamento (nao entra em vendasTotal/saldo esperado).
+      let fiadoVisualTotal = 0;
+      let vendasQuery = supabase
+        .from('vendas')
+        .select('id, total, forma_pagamento')
+        .eq('user_id', user.id)
+        .eq('status', 'concluido')
+        .or(`and(data_criacao.gte.${startIso},data_criacao.lte.${endIso}),and(data_hora.gte.${startIso},data_hora.lte.${endIso})`);
+
+      const { data: vendasDia, error: vendasDiaError } = await vendasQuery;
+      if (vendasDiaError) throw vendasDiaError;
+
+      const saleIds = (vendasDia || []).map((v) => v.id).filter(Boolean);
+      let pagamentosDia = [];
+      if (saleIds.length > 0) {
+        const { data: pagamentosData, error: pagamentosError } = await supabase
+          .from('venda_pagamentos')
+          .select('venda_id, forma_pagamento, valor')
+          .eq('user_id', user.id)
+          .in('venda_id', saleIds);
+
+        if (pagamentosError) throw pagamentosError;
+        pagamentosDia = pagamentosData || [];
+      }
+
+      const pagamentosBySaleId = new Map();
+      (pagamentosDia || []).forEach((p) => {
+        if (!p?.venda_id) return;
+        if (!pagamentosBySaleId.has(p.venda_id)) pagamentosBySaleId.set(p.venda_id, []);
+        pagamentosBySaleId.get(p.venda_id).push(p);
+      });
+
+      (vendasDia || []).forEach((venda) => {
+        const pays = pagamentosBySaleId.get(venda.id) || [];
+        if (pays.length > 0) {
+          pays.forEach((p) => {
+            if (normalizeMethod(p?.forma_pagamento) === 'fiado') {
+              fiadoVisualTotal += Number(p?.valor || 0);
+            }
+          });
+          return;
+        }
+
+        if (normalizeMethod(venda?.forma_pagamento) === 'fiado') {
+          fiadoVisualTotal += Number(venda?.total || 0);
+        }
+      });
+
+      paymentsBase.fiado = fiadoVisualTotal;
+
       setPaymentSummary(paymentsBase);
       setOpsSummary(opsBase);
       setSalesTotal(vendasTotal);
