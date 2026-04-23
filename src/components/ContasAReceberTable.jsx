@@ -11,6 +11,28 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
 
+const getLocalDateKey = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const toDateKey = (raw) => {
+  if (!raw) return null;
+  const value = String(raw);
+  if (value.includes('T')) return value.split('T')[0];
+  return value;
+};
+
+const formatDateBr = (raw) => {
+  const dateKey = toDateKey(raw);
+  if (!dateKey) return '-';
+  const [year, month, day] = dateKey.split('-');
+  if (!year || !month || !day) return dateKey;
+  return `${day}/${month}/${year}`;
+};
+
 const ContasAReceberTable = ({ 
   data = [], 
   loading = false, 
@@ -63,6 +85,7 @@ const ContasAReceberTable = ({
   const selectableIds = sortedData.filter((item) => item.status !== 'pago').map((item) => item.id);
   const isAllSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
   const isSomeSelected = selectableIds.some((id) => selectedIds.has(id));
+  const todayKey = getLocalDateKey();
 
   useEffect(() => {
     if (selectAllRef.current) {
@@ -128,9 +151,13 @@ const ContasAReceberTable = ({
         </thead>
         <tbody className="divide-y divide-gray-700">
           {sortedData.map((item) => {
-             const isOverdue = item.status !== 'pago' && item.data_vencimento < new Date().toISOString().split('T')[0];
+             const isOverdue = item.status !== 'pago' && item.data_vencimento < todayKey;
              const isSelectable = item.status !== 'pago';
              const itensResumo = getItensResumo(item);
+             const saleDateKey =
+               item?.origem === 'venda'
+                 ? toDateKey(item?.venda?.data_hora || item?.venda?.data_criacao || item?.created_at)
+                 : null;
              
              return (
               <tr key={item.id} className="hover:bg-[var(--layout-surface-2)] transition-colors group">
@@ -145,7 +172,12 @@ const ContasAReceberTable = ({
                   />
                 </td>
                 <td className="p-4 text-sm font-mono text-[var(--layout-text-muted)]">
-                  {new Date(item.data_vencimento).toLocaleDateString('pt-BR')}
+                  {formatDateBr(item.data_vencimento)}
+                  {saleDateKey && (
+                    <div className="text-[10px] text-[var(--layout-text-muted)] mt-1">
+                      Venda: {formatDateBr(saleDateKey)}
+                    </div>
+                  )}
                   {item.venda && (
                     <div className="text-[10px] text-[var(--layout-text-muted)] mt-1 flex items-center gap-1">
                       <span className="opacity-75">#{item.venda.numero_venda}</span>

@@ -3,9 +3,25 @@ import { X, CheckCircle, Calendar, CreditCard, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const getLocalDateKey = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatDateBr = (raw) => {
+  if (!raw) return '-';
+  const value = String(raw);
+  const dateKey = value.includes('T') ? value.split('T')[0] : value;
+  const [year, month, day] = dateKey.split('-');
+  if (!year || !month || !day) return dateKey;
+  return `${day}/${month}/${year}`;
+};
+
 const MarcarComoPagoModal = ({ isOpen, onClose, conta, contas = [], onConfirm }) => {
   const [formData, setFormData] = useState({
-    dataPagamento: new Date().toISOString().split('T')[0],
+    dataPagamento: getLocalDateKey(new Date()),
     formaPagamento: 'Dinheiro',
     observacoes: ''
   });
@@ -81,7 +97,7 @@ const MarcarComoPagoModal = ({ isOpen, onClose, conta, contas = [], onConfirm })
                   <div className="flex justify-between">
                     <span className="text-gray-400 text-sm">Vencimento</span>
                     <span className="text-white font-mono text-sm">
-                      {new Date(list[0].data_vencimento).toLocaleDateString('pt-BR')}
+                      {formatDateBr(list[0].data_vencimento)}
                     </span>
                   </div>
                 </>

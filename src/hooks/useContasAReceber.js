@@ -31,6 +31,37 @@ export const useContasAReceber = () => {
     return clean;
   };
 
+  const getLocalDateKey = (date = new Date()) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const extractDateKey = (raw) => {
+    if (!raw) return null;
+    const value = String(raw);
+    if (value.includes('T')) return value.split('T')[0];
+    return value;
+  };
+
+  const getContaReferenceDate = (conta) => {
+    if (!conta) return null;
+    if (conta?.origem === 'venda') {
+      return (
+        extractDateKey(conta?.venda?.data_hora) ||
+        extractDateKey(conta?.venda?.data_criacao) ||
+        extractDateKey(conta?.created_at) ||
+        extractDateKey(conta?.data_vencimento)
+      );
+    }
+    return (
+      extractDateKey(conta?.data_vencimento) ||
+      extractDateKey(conta?.created_at) ||
+      extractDateKey(conta?.atualizado_em)
+    );
+  };
+
   const buildPaymentIso = (dateStr) => {
     if (!dateStr) return new Date().toISOString();
     const safe = `${dateStr}T12:00:00`;
@@ -38,7 +69,7 @@ export const useContasAReceber = () => {
   };
 
   const buildDayRange = (dateStr) => {
-    const base = dateStr || new Date().toISOString().split('T')[0];
+    const base = dateStr || getLocalDateKey();
     const start = new Date(`${base}T00:00:00`);
     const end = new Date(`${base}T23:59:59`);
     end.setMilliseconds(999);
@@ -47,18 +78,12 @@ export const useContasAReceber = () => {
 
   const pickContaDay = (conta) => {
     if (!conta) return null;
-    const raw =
+    return extractDateKey(
       conta.data_pagamento ||
       conta.atualizado_em ||
-      conta.data_vencimento ||
-      conta.created_at;
-    if (!raw) return null;
-    try {
-      if (raw.includes('T')) return raw.split('T')[0];
-      return raw;
-    } catch (e) {
-      return null;
-    }
+      conta.created_at ||
+      conta.data_vencimento
+    );
   };
 
   const applyStockUpdate = async (produtoId, newStock) => {
@@ -118,6 +143,7 @@ export const useContasAReceber = () => {
             numero_venda,
             total,
             data_hora,
+            data_criacao,
             itens:itens_venda(
               quantidade,
               produto:produtos(descricao)
@@ -133,20 +159,13 @@ export const useContasAReceber = () => {
         query = query.eq('status', statusMap[filters.status] || filters.status);
         
         if (filters.status === 'Vencido') {
-          const today = new Date().toISOString().split('T')[0];
+          const today = getLocalDateKey();
           query = query.lt('data_vencimento', today);
         }
       }
 
       if (filters.clienteId && filters.clienteId !== 'todos') {
         query = query.eq('cliente_id', filters.clienteId);
-      }
-
-      if (filters.startDate) {
-        query = query.gte('data_vencimento', filters.startDate);
-      }
-      if (filters.endDate) {
-        query = query.lte('data_vencimento', filters.endDate);
       }
 
       // Execute Query
@@ -168,7 +187,16 @@ export const useContasAReceber = () => {
         console.log("ℹ️ useContasAReceber: No records found.");
       }
 
-      const contasData = data || [];
+      let contasData = data || [];
+      if (filters.startDate || filters.endDate) {
+        contasData = contasData.filter((conta) => {
+          const refDate = getContaReferenceDate(conta);
+          if (!refDate) return false;
+          if (filters.startDate && refDate < filters.startDate) return false;
+          if (filters.endDate && refDate > filters.endDate) return false;
+          return true;
+        });
+      }
       setContas(contasData);
       calculateSummary(contasData);
 
@@ -185,7 +213,7 @@ export const useContasAReceber = () => {
   }, [user, toast]);
 
   const calculateSummary = (data) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateKey();
     
     const summaryData = data.reduce((acc, curr) => {
       const valor = parseFloat(curr.valor || 0);

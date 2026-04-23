@@ -70,6 +70,13 @@ const buildPaymentRecordsForAttempt = (payments = [], userId, vendaId, attempt =
     };
   });
 
+const toLocalDateKey = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const PaymentModal = ({
   isOpen,
   onClose,
@@ -384,7 +391,7 @@ const PaymentModal = ({
               venda_id: venda.id,
               valor: p.value,
               status: 'pendente',
-              data_vencimento: vencimento.toISOString().split('T')[0],
+              data_vencimento: toLocalDateKey(vencimento),
               observacoes: `Venda #${numeroVenda} - Fiado`,
               origem: 'venda'
             };

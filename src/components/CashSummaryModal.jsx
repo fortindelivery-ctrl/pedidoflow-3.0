@@ -26,6 +26,13 @@ const CashSummaryModal = ({ isOpen, onClose, caixaId }) => {
     return null;
   };
 
+  const isMultipleMethodLabel = (method) => {
+    const raw = (method || '').toString().trim().toLowerCase();
+    if (!raw) return false;
+    const clean = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return clean.includes('multiplo') || clean.includes('multiplos') || clean.includes('misto');
+  };
+
   const applySalesDateRange = (query, startIso, endIso) =>
     query.or(`and(data_criacao.gte.${startIso},data_criacao.lte.${endIso}),and(data_hora.gte.${startIso},data_hora.lte.${endIso})`);
   
@@ -153,20 +160,39 @@ const CashSummaryModal = ({ isOpen, onClose, caixaId }) => {
         }
       }
 
-      const paidSaleIds = new Set();
-
+      const pagamentosBySaleId = new Map();
       (pagamentos || []).forEach((p) => {
-        if (p?.venda_id) paidSaleIds.add(p.venda_id);
-        const key = normalizeMethod(p?.forma_pagamento);
-        if (!key) return;
-        payments[key] += Number(p?.valor || 0);
+        if (!p?.venda_id) return;
+        if (!pagamentosBySaleId.has(p.venda_id)) {
+          pagamentosBySaleId.set(p.venda_id, []);
+        }
+        pagamentosBySaleId.get(p.venda_id).push(p);
       });
 
-      vendas?.forEach((v) => {
-        if (paidSaleIds.has(v.id)) return;
-        const key = normalizeMethod(v?.forma_pagamento);
-        if (!key) return;
-        payments[key] += Number(v?.total || 0);
+      // Regra: para venda com método único, prioriza o método salvo em "vendas".
+      // Isso evita classificar QR Code como PIX quando "venda_pagamentos" caiu em fallback.
+      (vendas || []).forEach((v) => {
+        const saleMethodKey = normalizeMethod(v?.forma_pagamento);
+        const salePayments = pagamentosBySaleId.get(v.id) || [];
+        const hasSingleMethod = saleMethodKey && !isMultipleMethodLabel(v?.forma_pagamento);
+
+        if (hasSingleMethod) {
+          payments[saleMethodKey] += Number(v?.total || 0);
+          return;
+        }
+
+        if (salePayments.length > 0) {
+          salePayments.forEach((p) => {
+            const key = normalizeMethod(p?.forma_pagamento);
+            if (!key) return;
+            payments[key] += Number(p?.valor || 0);
+          });
+          return;
+        }
+
+        if (saleMethodKey) {
+          payments[saleMethodKey] += Number(v?.total || 0);
+        }
       });
 
       // 4. Fetch Movements (Suprimentos/Retiradas)
