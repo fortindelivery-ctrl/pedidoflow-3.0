@@ -15,22 +15,6 @@ export const useContasAReceber = () => {
     overdueCount: 0
   });
 
-  const normalizePaymentMethod = (method) => {
-    const raw = (method || '').toString().trim().toLowerCase();
-    if (!raw) return null;
-    const clean = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    if (clean.includes('dinheiro')) return 'dinheiro';
-    if (clean.includes('pix')) return 'pix';
-    if (clean.includes('qrcode') || clean.includes('qr code') || clean === 'qr' || clean.includes('qr_')) return 'qrcode';
-    if (clean.includes('debito')) return 'debito';
-    if (clean.includes('credito')) return 'credito';
-    if (clean.includes('fiado')) return 'fiado';
-    if (clean.includes('consumo')) return 'consumo';
-    if (clean.includes('cheque')) return 'cheque';
-    if (clean.includes('outro')) return 'outro';
-    return clean;
-  };
-
   const getLocalDateKey = (date = new Date()) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -60,12 +44,6 @@ export const useContasAReceber = () => {
       extractDateKey(conta?.created_at) ||
       extractDateKey(conta?.atualizado_em)
     );
-  };
-
-  const buildPaymentIso = (dateStr) => {
-    if (!dateStr) return new Date().toISOString();
-    const safe = `${dateStr}T12:00:00`;
-    return new Date(safe).toISOString();
   };
 
   const buildDayRange = (dateStr) => {
@@ -235,216 +213,48 @@ export const useContasAReceber = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const { data: conta } = await supabase.from('contas_receber').select('*').eq('id', contaId).single();
-      if (!conta) throw new Error("Conta não encontrada");
+      const { data: conta } = await supabase
+        .from('contas_receber')
+        .select('*')
+        .eq('id', contaId)
+        .eq('user_id', user.id)
+        .single();
 
-      const { data: caixa } = await supabase.from('caixas').select('*').eq('user_id', user.id).eq('status', 'aberto').single();
-      const paymentMethod = normalizePaymentMethod(paymentData?.formaPagamento);
-      const paymentDateIso = buildPaymentIso(paymentData?.dataPagamento);
+      if (!conta) throw new Error('Conta nao encontrada');
 
-      let vendaInfo = null;
-      if (conta?.venda_id) {
-        const { data: vendaData } = await supabase
-          .from('vendas')
-          .select('id, numero_venda, data_hora, data_criacao')
-          .eq('id', conta.venda_id)
-          .maybeSingle();
-        vendaInfo = vendaData || null;
-      }
+      const paymentDate = paymentData?.dataPagamento || getLocalDateKey();
+      const extraObs = (paymentData?.observacoes || '').trim();
+      const methodObs = (paymentData?.formaPagamento || '').trim();
+
+      const baixaNoteParts = [
+        `Baixa registrada em ${paymentDate} (sem impacto no caixa e no fluxo de vendas)`
+      ];
+      if (methodObs) baixaNoteParts.push(`Forma informada: ${methodObs}`);
+      if (extraObs) baixaNoteParts.push(extraObs);
+
+      const baixaNote = baixaNoteParts.join(' | ');
+      const observacoes = conta?.observacoes
+        ? `${conta.observacoes} | ${baixaNote}`
+        : baixaNote;
 
       const { error: updateError } = await supabase
         .from('contas_receber')
         .update({
           status: 'pago',
-          data_pagamento: paymentData.dataPagamento,
-          observacoes: paymentData.observacoes 
-            ? `${conta.observacoes || ''} | Pagamento: ${paymentData.observacoes}` 
-            : conta.observacoes,
+          data_pagamento: paymentDate,
+          observacoes,
           atualizado_em: new Date().toISOString()
         })
-        .eq('id', contaId);
+        .eq('id', contaId)
+        .eq('user_id', user.id);
 
       if (updateError) throw updateError;
 
-      if (conta?.venda_id) {
-        try {
-          const { data: pagamentosExist } = await supabase
-            .from('venda_pagamentos')
-            .select('id, forma_pagamento, valor')
-            .eq('user_id', user.id)
-            .eq('venda_id', conta.venda_id);
-
-          let updatedPaymentId = null;
-          if (pagamentosExist && pagamentosExist.length > 0) {
-            const match = pagamentosExist.find((p) =>
-              normalizePaymentMethod(p?.forma_pagamento) === 'fiado' &&
-              Math.abs(Number(p?.valor || 0) - Number(conta?.valor || 0)) < 0.01
-            );
-            const fallback = pagamentosExist.find((p) => normalizePaymentMethod(p?.forma_pagamento) === 'fiado');
-            const target = match || fallback;
-
-            if (target) {
-              const { error: updPayError } = await supabase
-                .from('venda_pagamentos')
-                .update({
-                  forma_pagamento: paymentMethod || target.forma_pagamento,
-                  data_pagamento: paymentDateIso
-                })
-                .eq('id', target.id);
-
-              if (!updPayError) updatedPaymentId = target.id;
-            }
-          }
-
-          if (!updatedPaymentId) {
-            await supabase.from('venda_pagamentos').insert({
-              user_id: user.id,
-              venda_id: conta.venda_id,
-              forma_pagamento: paymentMethod || (paymentData?.formaPagamento || 'dinheiro'),
-              valor: Number(conta?.valor || 0),
-              data_pagamento: paymentDateIso
-            });
-          }
-
-          const { data: allPays } = await supabase
-            .from('venda_pagamentos')
-            .select('forma_pagamento')
-            .eq('user_id', user.id)
-            .eq('venda_id', conta.venda_id);
-
-          if (allPays && allPays.length > 0) {
-            const methods = new Set(
-              allPays
-                .map((p) => normalizePaymentMethod(p?.forma_pagamento))
-                .filter(Boolean)
-            );
-            const newForma = methods.size > 1 ? 'multiplo' : Array.from(methods)[0];
-            if (newForma) {
-              await supabase.from('vendas').update({ forma_pagamento: newForma }).eq('id', conta.venda_id);
-            }
-          }
-
-          if (vendaInfo) {
-            const desc = `Venda #${vendaInfo.numero_venda || vendaInfo.id}`;
-            await supabase
-              .from('caixa_movimentos')
-              .update({ forma_pagamento: paymentMethod || (paymentData?.formaPagamento || 'dinheiro') })
-              .eq('user_id', user.id)
-              .eq('tipo', 'venda')
-              .eq('descricao', desc);
-          }
-        } catch (reconcileError) {
-          console.warn('Erro ao reconciliar pagamento da venda:', reconcileError);
-        }
-      }
-
-      if (caixa) {
-        const valor = parseFloat(conta.valor);
-        const hasVenda = Boolean(vendaInfo || conta?.venda_id);
-        const vendaDesc = hasVenda ? `Venda #${vendaInfo?.numero_venda || vendaInfo?.id || conta?.venda_id}` : null;
-        const resolvedMethod = paymentMethod || paymentData.formaPagamento;
-
-        const todayLocal = new Date();
-        const localDateStr = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, '0')}-${String(todayLocal.getDate()).padStart(2, '0')}`;
-        const paymentDayLocal = paymentData?.dataPagamento || localDateStr;
-
-        if (hasVenda) {
-          const { startIso, endIso } = buildDayRange(paymentDayLocal);
-          const { data: existingMove } = await supabase
-            .from('caixa_movimentos')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('caixa_id', caixa.id)
-            .eq('tipo', 'suprimento')
-            .eq('valor', valor)
-            .gte('data_movimentacao', startIso)
-            .lte('data_movimentacao', endIso)
-            .ilike('descricao', 'Recebimento Fiado%')
-            .order('data_movimentacao', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          if (existingMove?.id) {
-            await supabase
-              .from('caixa_movimentos')
-              .update({
-                tipo: 'venda',
-                descricao: vendaDesc,
-                forma_pagamento: resolvedMethod
-              })
-              .eq('id', existingMove.id);
-
-            const nextSup = Math.max(0, Number(caixa.total_suprimentos || 0) - valor);
-            const nextVendas = Number(caixa.total_vendas || 0) + valor;
-            await supabase
-              .from('caixas')
-              .update({
-                total_suprimentos: nextSup,
-                total_vendas: nextVendas
-              })
-              .eq('id', caixa.id);
-          } else {
-            const { data: existingVendaMove } = await supabase
-              .from('caixa_movimentos')
-              .select('id')
-              .eq('user_id', user.id)
-              .eq('caixa_id', caixa.id)
-              .eq('tipo', 'venda')
-              .eq('valor', valor)
-              .eq('descricao', vendaDesc)
-              .gte('data_movimentacao', startIso)
-              .lte('data_movimentacao', endIso)
-              .order('data_movimentacao', { ascending: false })
-              .limit(1)
-              .maybeSingle();
-
-            if (existingVendaMove?.id) {
-              await supabase
-                .from('caixa_movimentos')
-                .update({ forma_pagamento: resolvedMethod })
-                .eq('id', existingVendaMove.id);
-            } else {
-              await supabase.from('caixa_movimentos').insert({
-                user_id: user.id,
-                caixa_id: caixa.id,
-                tipo: 'venda',
-                valor: valor,
-                descricao: vendaDesc,
-                forma_pagamento: resolvedMethod,
-                saldo_anterior: caixa.saldo_atual,
-                saldo_novo: (caixa.saldo_atual || 0) + valor,
-                data_movimentacao: new Date().toISOString()
-              });
-
-              await supabase.rpc('increment_caixa_saldo', {
-                p_caixa_id: caixa.id,
-                p_valor: valor,
-                p_tipo: 'venda'
-              });
-            }
-          }
-        } else {
-          await supabase.from('caixa_movimentos').insert({
-            user_id: user.id,
-            caixa_id: caixa.id,
-            tipo: 'suprimento',
-            valor: valor,
-            descricao: `Recebimento Fiado - Cliente: ${paymentData.clienteName || 'N/A'}`,
-            forma_pagamento: resolvedMethod,
-            saldo_anterior: caixa.saldo_atual,
-            saldo_novo: (caixa.saldo_atual || 0) + valor,
-            data_movimentacao: new Date().toISOString()
-          });
-
-          await supabase.rpc('increment_caixa_saldo', {
-            p_caixa_id: caixa.id,
-            p_valor: valor,
-            p_tipo: 'suprimento'
-          });
-        }
-      }
-
-      toast({ title: 'Sucesso', description: 'Conta marcada como paga!', className: 'bg-green-600 text-white' });
+      toast({
+        title: 'Sucesso',
+        description: 'Conta marcada como paga sem alterar vendas e saldos do caixa.',
+        className: 'bg-green-600 text-white'
+      });
       await fetchContas();
 
     } catch (error) {

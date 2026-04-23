@@ -71,6 +71,15 @@ const ContasApagarPage = () => {
       endOfDay ? 999 : 0
     );
   };
+
+  const formatDateBr = (dateStr) => {
+    if (!dateStr) return '-';
+    const parts = String(dateStr).split('-');
+    if (parts.length !== 3) return String(dateStr);
+    const [year, month, day] = parts;
+    if (!year || !month || !day) return String(dateStr);
+    return `${day}/${month}/${year}`;
+  };
   const reminders = useMemo(() => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -333,7 +342,7 @@ const ContasApagarPage = () => {
                 <div>
                   <p className="text-white text-sm font-bold">{conta.descricao}</p>
                   <p className="text-[var(--layout-text-muted)] text-xs">
-                    Vencimento: {new Date(conta.data_vencimento).toLocaleDateString('pt-BR')}
+                    Vencimento: {formatDateBr(conta.data_vencimento)}
                   </p>
                 </div>
                 <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-500/20 text-yellow-200">
@@ -441,7 +450,7 @@ const ContasApagarPage = () => {
                   <td className="py-3 px-4 text-white font-medium">{conta.descricao}</td>
                   <td className="py-3 px-4 text-[var(--layout-text-muted)]">{conta.fornecedor}</td>
                   <td className="py-3 px-4 text-center text-[var(--layout-text-muted)]">
-                    {new Date(conta.data_vencimento).toLocaleDateString('pt-BR')}
+                    {formatDateBr(conta.data_vencimento)}
                   </td>
                   <td className="py-3 px-4 text-right text-white font-bold">
                     R$ {parseFloat(conta.valor).toFixed(2)}
