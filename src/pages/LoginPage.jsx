@@ -119,8 +119,8 @@ const LoginPage = () => {
 
   return (
     <div
-      className="login-bg min-h-screen bg-[var(--layout-bg)] flex items-center justify-center p-4"
-      style={{ backgroundImage: "url('/tutu.png')" }}
+      className="login-bg relative flex min-h-screen items-center justify-center bg-[var(--layout-bg)] p-4"
+      style={{ backgroundImage: "linear-gradient(130deg, color-mix(in srgb, var(--layout-bg) 78%, transparent), color-mix(in srgb, var(--layout-surface) 82%, transparent)), url('/tutu.png')" }}
     >
       <Helmet>
         <title>{isSignup ? 'Cadastro' : isRecovery ? 'Recuperar Senha' : 'Login'} - PedidoFlow</title>
@@ -129,15 +129,15 @@ const LoginPage = () => {
 
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--layout-accent)] rounded-2xl mb-4">
-            <Store className="w-8 h-8 text-white" />
+          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--layout-border)] bg-[var(--layout-elevated)] shadow-xl">
+            <Store className="h-8 w-8 text-[var(--layout-accent)]" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">PedidoFlow</h1>
+          <h1 className="mb-2 text-3xl font-bold text-[var(--layout-text)]">PedidoFlow</h1>
           <p className="text-[var(--layout-text-muted)]">Sistema de Gestão Comercial</p>
         </div>
 
-        <div className="bg-[var(--layout-surface-2)]/90 rounded-2xl shadow-2xl p-8 border border-[var(--layout-border)] backdrop-blur-sm">
-          <h2 className="text-2xl font-bold text-white mb-6">
+        <div className="rounded-2xl border border-[var(--layout-border)] bg-[var(--layout-surface)]/92 p-8 shadow-2xl backdrop-blur-sm">
+          <h2 className="mb-6 text-2xl font-bold text-[var(--layout-text)]">
             {isRecovery ? 'Recuperar Senha' : isSignup ? 'Criar Conta' : 'Entrar'}
           </h2>
 
@@ -161,7 +161,7 @@ const LoginPage = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-lg pl-10 pr-4 py-3 text-white placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none transition-colors"
+                    className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-lg pl-10 pr-4 py-3 text-[var(--layout-text)] placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none transition-colors"
                     placeholder="Seu nome"
                   />
                 </div>
@@ -182,7 +182,7 @@ const LoginPage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-lg pl-10 pr-4 py-3 text-white placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none transition-colors"
+                  className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-lg pl-10 pr-4 py-3 text-[var(--layout-text)] placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none transition-colors"
                   placeholder="seu@email.com"
                 />
               </div>
@@ -204,7 +204,7 @@ const LoginPage = () => {
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
-                      className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-lg pl-10 pr-4 py-3 text-white placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none transition-colors"
+                      className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-lg pl-10 pr-4 py-3 text-[var(--layout-text)] placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none transition-colors"
                       placeholder="••••••••"
                     />
                   </div>
@@ -225,7 +225,7 @@ const LoginPage = () => {
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-lg pl-10 pr-4 py-3 text-white placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none transition-colors"
+                        className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-lg pl-10 pr-4 py-3 text-[var(--layout-text)] placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none transition-colors"
                         placeholder="••••••••"
                       />
                     </div>
@@ -240,7 +240,7 @@ const LoginPage = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-[var(--layout-accent)] hover:bg-[var(--layout-accent-strong)] text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center"
+              className="flex w-full items-center justify-center rounded-lg py-3"
             >
               {loading ? (
                 <>
@@ -262,7 +262,7 @@ const LoginPage = () => {
                   setAuthError(null);
                   setErrors({});
                 }}
-                className="text-[var(--layout-accent)] hover:text-[#00b872] text-sm transition-colors block mx-auto"
+                className="mx-auto block text-sm text-[var(--layout-accent)] transition-colors hover:text-[var(--layout-accent-strong)]"
               >
                 Esqueceu sua senha?
               </button>
@@ -277,7 +277,7 @@ const LoginPage = () => {
                   setErrors({});
                   setAuthError(null);
                 }}
-                className="text-[var(--layout-text-muted)] hover:text-white text-sm transition-colors block mx-auto"
+                className="mx-auto block text-sm text-[var(--layout-text-muted)] transition-colors hover:text-[var(--layout-text)]"
               >
                 {isSignup ? 'Já tem uma conta? Entrar' : 'Não tem uma conta? Cadastre-se'}
               </button>
@@ -291,7 +291,7 @@ const LoginPage = () => {
                   setErrors({});
                   setAuthError(null);
                 }}
-                className="text-[var(--layout-text-muted)] hover:text-white text-sm transition-colors block mx-auto"
+                className="mx-auto block text-sm text-[var(--layout-text-muted)] transition-colors hover:text-[var(--layout-text)]"
               >
                 Voltar para o login
               </button>
@@ -308,3 +308,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+

@@ -37,22 +37,22 @@ const Header = ({ onMenuClick }) => {
   const userEmail = user?.email || '';
 
   return (
-    <header className="bg-[var(--layout-bg)] border-b border-[var(--layout-border)] px-4 py-4 sm:px-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0">
+    <header className="shrink-0 border-b border-[var(--layout-border)] bg-[var(--layout-surface)]/95 px-4 py-4 backdrop-blur-sm sm:px-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center justify-between gap-3 w-full sm:w-auto">
         <div className="flex items-center gap-3">
           {onMenuClick ? (
             <button
               type="button"
               onClick={onMenuClick}
-              className="md:hidden rounded-lg border border-[var(--layout-border)] p-2 text-[var(--layout-text-muted)] hover:text-white"
+              className="rounded-lg border border-[var(--layout-border)] p-2 text-[var(--layout-text-muted)] hover:text-[var(--layout-text)] md:hidden"
               aria-label="Abrir menu"
             >
               <Menu className="w-4 h-4" />
             </button>
           ) : null}
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-[var(--layout-accent)] rounded-full animate-pulse"></div>
-            <span className="text-sm text-[var(--layout-text-muted)]">Sistema Online</span>
+          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--layout-border)] bg-[var(--layout-surface-2)] px-3 py-1.5">
+            <div className="h-2 w-2 rounded-full bg-[var(--layout-accent)] animate-pulse" />
+            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--layout-text-muted)]">Sistema Online</span>
           </div>
         </div>
       </div>
@@ -60,7 +60,7 @@ const Header = ({ onMenuClick }) => {
       <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-6">
         <div className="text-right hidden sm:block">
           <div className="text-sm text-[var(--layout-text-muted)] capitalize">{formatDate(currentTime)}</div>
-          <div className="text-lg font-semibold text-white flex items-center justify-end gap-2">
+          <div className="text-lg font-semibold text-[var(--layout-text)] flex items-center justify-end gap-2">
             <Clock className="w-4 h-4 text-[var(--layout-accent)]" />
             {formatTime(currentTime)}
           </div>
@@ -69,10 +69,10 @@ const Header = ({ onMenuClick }) => {
         <div className="h-10 w-px bg-[var(--layout-border)] hidden sm:block"></div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 bg-[var(--layout-surface-2)] px-3 py-2 rounded-lg w-full sm:w-auto">
+          <div className="flex w-full items-center gap-2 rounded-xl border border-[var(--layout-border)] bg-[var(--layout-surface-2)] px-3 py-2 sm:w-auto">
             <User className="w-4 h-4 text-[var(--layout-accent)]" />
             <div className="text-sm min-w-0">
-              <div className="text-white font-medium max-w-[200px] truncate">{userName}</div>
+              <div className="max-w-[200px] truncate font-medium text-[var(--layout-text)]">{userName}</div>
               <div className="text-[var(--layout-text-muted)] text-xs max-w-[200px] truncate">{userEmail}</div>
             </div>
           </div>
@@ -81,7 +81,7 @@ const Header = ({ onMenuClick }) => {
             onClick={logout}
             variant="outline"
             size="sm"
-            className="bg-transparent border-[var(--layout-border)] text-white hover:bg-red-500/10 hover:border-red-500 hover:text-red-400 transition-all"
+            className="border-[var(--layout-border)] bg-transparent text-[var(--layout-text)] hover:border-red-500 hover:bg-red-500/10 hover:text-red-400"
           >
             <LogOut className="w-4 h-4 sm:mr-2" />
             <span className="hidden sm:inline">Sair</span>

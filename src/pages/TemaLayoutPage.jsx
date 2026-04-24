@@ -28,11 +28,11 @@ const TemaLayoutPage = () => {
       </Helmet>
 
       <div className="mb-6 flex items-start gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--layout-surface-2)] text-[var(--layout-accent)]">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--layout-border)] bg-[var(--layout-elevated)] text-[var(--layout-accent)]">
           <Palette className="h-6 w-6" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-white">Mudar as cores do layout</h1>
+          <h1 className="text-3xl font-bold text-[var(--layout-text)]">Mudar as cores do layout</h1>
           <p className="text-[var(--layout-text-muted)]">
             Escolha um tema para aplicar novas cores ao painel inteiro.
           </p>
@@ -47,17 +47,17 @@ const TemaLayoutPage = () => {
               key={theme.key}
               className={`rounded-2xl border p-4 transition-all ${
                 isActive
-                  ? 'border-[var(--layout-accent)] bg-[var(--layout-surface-2)]'
-                  : 'border-[var(--layout-border)] bg-[var(--layout-bg)]'
+                  ? 'border-[var(--layout-accent)] bg-[var(--layout-surface-2)] shadow-[0_22px_35px_-24px_var(--layout-accent)]'
+                  : 'border-[var(--layout-border)] bg-[var(--layout-surface)]'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-lg font-semibold text-white">{theme.name}</div>
+                  <div className="text-lg font-semibold text-[var(--layout-text)]">{theme.name}</div>
                   <div className="text-sm text-[var(--layout-text-muted)]">{theme.description}</div>
                 </div>
                 {isActive ? (
-                  <span className="rounded-full bg-[var(--layout-accent)] px-3 py-1 text-xs font-semibold text-white">
+                  <span className="rounded-full bg-[var(--layout-accent)] px-3 py-1 text-xs font-semibold text-[var(--layout-text)]">
                     Ativo
                   </span>
                 ) : null}
@@ -74,8 +74,8 @@ const TemaLayoutPage = () => {
                 onClick={() => handleSelectTheme(theme.key)}
                 className={`mt-4 w-full ${
                   isActive
-                    ? 'bg-[var(--layout-accent)] text-white hover:bg-[var(--layout-accent-strong)]'
-                    : 'bg-[var(--layout-surface-2)] text-white hover:bg-[var(--layout-border)]'
+                    ? 'bg-[var(--layout-accent)] text-[var(--layout-text)] hover:bg-[var(--layout-accent-strong)]'
+                    : 'bg-[var(--layout-surface-2)] text-[var(--layout-text)] hover:bg-[var(--layout-border)]'
                 }`}
               >
                 {isActive ? 'Tema em uso' : 'Aplicar tema'}

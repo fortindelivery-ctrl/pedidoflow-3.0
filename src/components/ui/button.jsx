@@ -4,19 +4,19 @@ import { cva } from 'class-variance-authority';
 import React from 'react';
 
 const buttonVariants = cva(
-	'inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+	'inline-flex items-center justify-center rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
 	{
 		variants: {
 			variant: {
 				default:
-          'bg-[var(--layout-accent)] text-white hover:bg-[var(--layout-accent-strong)]',
+          'bg-[var(--layout-accent)] text-[var(--layout-text)] hover:bg-[var(--layout-accent-strong)]',
 				destructive:
           'bg-red-600 text-white hover:bg-red-500',
 				outline:
-          'border border-[var(--layout-border)] bg-transparent text-white hover:bg-[var(--layout-surface-2)]',
+          'border border-[var(--layout-border)] bg-transparent text-[var(--layout-text)] hover:bg-[var(--layout-surface-2)]',
 				secondary:
-          'bg-[var(--layout-surface-2)] text-white hover:bg-[var(--layout-border)]',
-				ghost: 'text-white hover:bg-[var(--layout-surface-2)]',
+          'bg-[var(--layout-surface-2)] text-[var(--layout-text)] hover:bg-[var(--layout-border)]',
+				ghost: 'text-[var(--layout-text)] hover:bg-[var(--layout-surface-2)]',
 				link: 'text-[var(--layout-accent)] underline-offset-4 hover:underline',
 			},
 			size: {
