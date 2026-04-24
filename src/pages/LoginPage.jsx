@@ -1,70 +1,71 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { AlertCircle, Loader2, Lock, Mail, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Store, Mail, Lock, User, AlertCircle, Loader2 } from 'lucide-react';
+import { BRAND_LOGO_PATH, BRAND_NAME, BRAND_TAGLINE } from '@/config/brand';
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, signup, resetPassword } = useAuth();
-  
+
   const [isSignup, setIsSignup] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     name: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
 
-  const [errors, setErrors] = useState({});
+  const from = location.state?.from?.pathname || '/dashboard/pdv';
 
-  // Determine where to redirect after login
-  const from = location.state?.from?.pathname || "/dashboard/pdv";
+  const inputClass =
+    'w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-none ag-cut-sm pl-10 pr-4 py-3 text-[var(--layout-text)] placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none';
 
   const validateForm = () => {
-    const newErrors = {};
+    const nextErrors = {};
 
     if (!formData.email) {
-      newErrors.email = 'Email é obrigatório';
+      nextErrors.email = 'Email obrigatorio';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
+      nextErrors.email = 'Email invalido';
     }
 
     if (!isRecovery) {
       if (!formData.password) {
-        newErrors.password = 'Senha é obrigatória';
+        nextErrors.password = 'Senha obrigatoria';
       } else if (formData.password.length < 6) {
-        newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+        nextErrors.password = 'Senha deve ter pelo menos 6 caracteres';
       }
 
       if (isSignup) {
         if (!formData.name) {
-          newErrors.name = 'Nome é obrigatório';
+          nextErrors.name = 'Nome obrigatorio';
         }
         if (formData.password !== formData.confirmPassword) {
-          newErrors.confirmPassword = 'As senhas não conferem';
+          nextErrors.confirmPassword = 'As senhas nao conferem';
         }
       }
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setAuthError(null);
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
-
     try {
       if (isRecovery) {
         const { error } = await resetPassword(formData.email);
@@ -73,18 +74,10 @@ const LoginPage = () => {
         } else {
           setIsRecovery(false);
           setFormData({ email: '', password: '', name: '', confirmPassword: '' });
-          setAuthError(null);
         }
       } else if (isSignup) {
         const { error } = await signup(formData.email, formData.password, formData.name);
-        if (error) {
-          setAuthError(error.message);
-        } else {
-          // Typically auto-login or ask to check email. 
-          // If auth context handles auto-login on signup success, navigate.
-          // Supabase by default may require email confirmation, 
-          // so check the toast message from AuthContext.
-        }
+        if (error) setAuthError(error.message);
       } else {
         const { error } = await login(formData.email, formData.password);
         if (error) {
@@ -93,219 +86,205 @@ const LoginPage = () => {
           navigate(from, { replace: true });
         }
       }
-    } catch (err) {
+    } catch {
       setAuthError('Ocorreu um erro inesperado.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-    if (errors[e.target.name]) {
-      setErrors({
-        ...errors,
-        [e.target.name]: ''
-      });
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
-    // Clear global auth error when user starts typing again
-    if (authError) {
-      setAuthError(null);
-    }
+    if (authError) setAuthError(null);
+  };
+
+  const switchMode = ({ signup = false, recovery = false }) => {
+    setIsSignup(signup);
+    setIsRecovery(recovery);
+    setErrors({});
+    setAuthError(null);
   };
 
   return (
     <div
-      className="login-bg relative flex min-h-screen items-center justify-center bg-[var(--layout-bg)] p-4"
-      style={{ backgroundImage: "linear-gradient(130deg, color-mix(in srgb, var(--layout-bg) 78%, transparent), color-mix(in srgb, var(--layout-surface) 82%, transparent)), url('/tutu.png')" }}
+      className="login-bg ag-speedlines relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--layout-bg)] p-4 sm:p-6"
+      style={{
+        backgroundImage:
+          "linear-gradient(130deg, color-mix(in srgb, var(--layout-bg) 82%, transparent), color-mix(in srgb, var(--layout-surface) 85%, transparent)), url('/tutu.png')",
+      }}
     >
       <Helmet>
-        <title>{isSignup ? 'Cadastro' : isRecovery ? 'Recuperar Senha' : 'Login'} - PedidoFlow</title>
-        <meta name="description" content="Sistema de gestão comercial e ponto de venda" />
+        <title>{isSignup ? 'Cadastro' : isRecovery ? 'Recuperar Senha' : 'Login'} - {BRAND_NAME}</title>
+        <meta name="description" content="Sistema de gestao comercial e ponto de venda" />
       </Helmet>
 
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--layout-border)] bg-[var(--layout-elevated)] shadow-xl">
-            <Store className="h-8 w-8 text-[var(--layout-accent)]" />
+      <div className="ag-enter relative z-[2] w-full max-w-md ag-cut ag-panel p-1">
+        <div className="ag-cut bg-[var(--layout-surface)]/94 p-6 sm:p-8">
+          <div className="mb-8 text-center">
+            <div className="ag-cut-sm mx-auto mb-4 inline-flex h-20 w-20 items-center justify-center border border-[var(--layout-border)] bg-[var(--layout-elevated)] shadow-[0_20px_30px_-22px_var(--layout-accent)]">
+              <img src={BRAND_LOGO_PATH} alt={BRAND_NAME} className="h-16 w-16 object-cover" />
+            </div>
+            <h1 className="ag-heading text-5xl leading-none text-[var(--layout-text)]">{BRAND_NAME}</h1>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--layout-text-muted)]">
+              {BRAND_TAGLINE}
+            </p>
           </div>
-          <h1 className="mb-2 text-3xl font-bold text-[var(--layout-text)]">PedidoFlow</h1>
-          <p className="text-[var(--layout-text-muted)]">Sistema de Gestão Comercial</p>
-        </div>
 
-        <div className="rounded-2xl border border-[var(--layout-border)] bg-[var(--layout-surface)]/92 p-8 shadow-2xl backdrop-blur-sm">
-          <h2 className="mb-6 text-2xl font-bold text-[var(--layout-text)]">
-            {isRecovery ? 'Recuperar Senha' : isSignup ? 'Criar Conta' : 'Entrar'}
-          </h2>
+          <div className="ag-cut ag-panel p-5 sm:p-6">
+            <h2 className="ag-heading mb-5 text-3xl leading-none text-[var(--layout-text)]">
+              {isRecovery ? 'Recuperar Senha' : isSignup ? 'Criar Conta' : 'Entrar'}
+            </h2>
 
-          {authError && (
-            <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 mb-6 flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-              <p className="text-red-400 text-sm leading-relaxed">{authError}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignup && !isRecovery && (
-              <div>
-                <label className="block text-[var(--layout-text-muted)] text-sm font-medium mb-2">
-                  Nome Completo
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--layout-text-muted)]" />
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-lg pl-10 pr-4 py-3 text-[var(--layout-text)] placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none transition-colors"
-                    placeholder="Seu nome"
-                  />
-                </div>
-                {errors.name && (
-                  <p className="text-red-400 text-sm mt-1">{errors.name}</p>
-                )}
+            {authError ? (
+              <div className="ag-cut-sm mb-5 flex items-start gap-3 border border-red-500/45 bg-red-500/10 p-4">
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
+                <p className="text-sm leading-relaxed text-red-300">{authError}</p>
               </div>
-            )}
+            ) : null}
 
-            <div>
-              <label className="block text-[var(--layout-text-muted)] text-sm font-medium mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--layout-text-muted)]" />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-lg pl-10 pr-4 py-3 text-[var(--layout-text)] placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none transition-colors"
-                  placeholder="seu@email.com"
-                />
-              </div>
-              {errors.email && (
-                <p className="text-red-400 text-sm mt-1">{errors.email}</p>
-              )}
-            </div>
-
-            {!isRecovery && (
-              <>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {isSignup && !isRecovery ? (
                 <div>
-                  <label className="block text-[var(--layout-text-muted)] text-sm font-medium mb-2">
-                    Senha
+                  <label className="mb-2 block text-sm font-semibold uppercase tracking-[0.08em] text-[var(--layout-text-muted)]">
+                    Nome Completo
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--layout-text-muted)]" />
+                    <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--layout-text-muted)]" />
                     <input
-                      type="password"
-                      name="password"
-                      value={formData.password}
+                      type="text"
+                      name="name"
+                      value={formData.name}
                       onChange={handleChange}
-                      className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-lg pl-10 pr-4 py-3 text-[var(--layout-text)] placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none transition-colors"
-                      placeholder="••••••••"
+                      className={inputClass}
+                      placeholder="Seu nome"
                     />
                   </div>
-                  {errors.password && (
-                    <p className="text-red-400 text-sm mt-1">{errors.password}</p>
-                  )}
+                  {errors.name ? <p className="mt-1 text-sm text-red-400">{errors.name}</p> : null}
                 </div>
+              ) : null}
 
-                {isSignup && (
+              <div>
+                <label className="mb-2 block text-sm font-semibold uppercase tracking-[0.08em] text-[var(--layout-text-muted)]">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--layout-text-muted)]" />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={inputClass}
+                    placeholder="seu@email.com"
+                  />
+                </div>
+                {errors.email ? <p className="mt-1 text-sm text-red-400">{errors.email}</p> : null}
+              </div>
+
+              {!isRecovery ? (
+                <>
                   <div>
-                    <label className="block text-[var(--layout-text-muted)] text-sm font-medium mb-2">
-                      Confirmar Senha
+                    <label className="mb-2 block text-sm font-semibold uppercase tracking-[0.08em] text-[var(--layout-text-muted)]">
+                      Senha
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--layout-text-muted)]" />
+                      <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--layout-text-muted)]" />
                       <input
                         type="password"
-                        name="confirmPassword"
-                        value={formData.confirmPassword}
+                        name="password"
+                        value={formData.password}
                         onChange={handleChange}
-                        className="w-full bg-[var(--layout-bg)] border border-[var(--layout-border)] rounded-lg pl-10 pr-4 py-3 text-[var(--layout-text)] placeholder-[var(--layout-text-muted)] focus:border-[var(--layout-accent)] focus:outline-none transition-colors"
+                        className={inputClass}
                         placeholder="••••••••"
                       />
                     </div>
-                    {errors.confirmPassword && (
-                      <p className="text-red-400 text-sm mt-1">{errors.confirmPassword}</p>
-                    )}
+                    {errors.password ? <p className="mt-1 text-sm text-red-400">{errors.password}</p> : null}
                   </div>
-                )}
-              </>
-            )}
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center rounded-lg py-3"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processando...
+                  {isSignup ? (
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold uppercase tracking-[0.08em] text-[var(--layout-text-muted)]">
+                        Confirmar Senha
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--layout-text-muted)]" />
+                        <input
+                          type="password"
+                          name="confirmPassword"
+                          value={formData.confirmPassword}
+                          onChange={handleChange}
+                          className={inputClass}
+                          placeholder="••••••••"
+                        />
+                      </div>
+                      {errors.confirmPassword ? (
+                        <p className="mt-1 text-sm text-red-400">{errors.confirmPassword}</p>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </>
-              ) : (
-                isRecovery ? 'Enviar Email' : isSignup ? 'Cadastrar' : 'Entrar'
-              )}
-            </Button>
-          </form>
+              ) : null}
 
-          <div className="mt-6 space-y-3">
-            {!isRecovery && !isSignup && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRecovery(true);
-                  setAuthError(null);
-                  setErrors({});
-                }}
-                className="mx-auto block text-sm text-[var(--layout-accent)] transition-colors hover:text-[var(--layout-accent-strong)]"
-              >
-                Esqueceu sua senha?
-              </button>
-            )}
+              <Button type="submit" disabled={loading} className="mt-2 flex w-full items-center justify-center py-3">
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : isRecovery ? (
+                  'Enviar Email'
+                ) : isSignup ? (
+                  'Cadastrar'
+                ) : (
+                  'Entrar'
+                )}
+              </Button>
+            </form>
 
-            <div className="pt-4 border-t border-[var(--layout-border)]">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSignup(!isSignup);
-                  setIsRecovery(false);
-                  setErrors({});
-                  setAuthError(null);
-                }}
-                className="mx-auto block text-sm text-[var(--layout-text-muted)] transition-colors hover:text-[var(--layout-text)]"
-              >
-                {isSignup ? 'Já tem uma conta? Entrar' : 'Não tem uma conta? Cadastre-se'}
-              </button>
+            <div className="mt-6 space-y-3">
+              {!isRecovery && !isSignup ? (
+                <button
+                  type="button"
+                  onClick={() => switchMode({ signup: false, recovery: true })}
+                  className="mx-auto block text-sm font-semibold uppercase tracking-[0.11em] text-[var(--layout-accent)] hover:text-[var(--layout-accent-strong)]"
+                >
+                  Esqueceu sua senha?
+                </button>
+              ) : null}
+
+              <div className="border-t border-[var(--layout-border)] pt-4">
+                <button
+                  type="button"
+                  onClick={() => switchMode({ signup: !isSignup, recovery: false })}
+                  className="mx-auto block text-sm font-semibold uppercase tracking-[0.08em] text-[var(--layout-text-muted)] hover:text-[var(--layout-text)]"
+                >
+                  {isSignup ? 'Ja tem conta? Entrar' : 'Nao tem conta? Cadastre-se'}
+                </button>
+              </div>
+
+              {isRecovery ? (
+                <button
+                  type="button"
+                  onClick={() => switchMode({ signup: false, recovery: false })}
+                  className="mx-auto block text-sm font-semibold uppercase tracking-[0.08em] text-[var(--layout-text-muted)] hover:text-[var(--layout-text)]"
+                >
+                  Voltar para o login
+                </button>
+              ) : null}
             </div>
-
-            {isRecovery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRecovery(false);
-                  setErrors({});
-                  setAuthError(null);
-                }}
-                className="mx-auto block text-sm text-[var(--layout-text-muted)] transition-colors hover:text-[var(--layout-text)]"
-              >
-                Voltar para o login
-              </button>
-            )}
           </div>
-        </div>
 
-        <p className="text-center text-[var(--layout-text-muted)] text-sm mt-6">
-          © 2026 PedidoFlow. Todos os direitos reservados.
-        </p>
+          <p className="mt-6 text-center text-sm text-[var(--layout-text-muted)]">
+            {'(c)'} 2026 {BRAND_NAME}. Todos os direitos reservados.
+          </p>
+        </div>
       </div>
     </div>
   );
 };
 
 export default LoginPage;
-

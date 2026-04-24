@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { applyTheme, getStoredTheme, THEMES } from '@/utils/theme';
+import { BRAND_NAME } from '@/config/brand';
 
 const TemaLayoutPage = () => {
   const { toast } = useToast();
@@ -22,32 +23,32 @@ const TemaLayoutPage = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="ag-speedlines p-4 sm:p-6">
       <Helmet>
-        <title>Cores do Layout - PedidoFlow</title>
+        <title>Cores do Layout - {BRAND_NAME}</title>
       </Helmet>
 
-      <div className="mb-6 flex items-start gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--layout-border)] bg-[var(--layout-elevated)] text-[var(--layout-accent)]">
+      <div className="ag-enter mb-6 flex items-start gap-3">
+        <div className="ag-cut-sm flex h-12 w-12 items-center justify-center border border-[var(--layout-border)] bg-[var(--layout-elevated)] text-[var(--layout-accent)]">
           <Palette className="h-6 w-6" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-[var(--layout-text)]">Mudar as cores do layout</h1>
+          <h1 className="ag-heading text-4xl leading-none text-[var(--layout-text)]">Mudar as cores do layout</h1>
           <p className="text-[var(--layout-text-muted)]">
             Escolha um tema para aplicar novas cores ao painel inteiro.
           </p>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="ag-stagger grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {THEMES.map((theme) => {
           const isActive = activeTheme === theme.key;
           return (
             <div
               key={theme.key}
-              className={`rounded-2xl border p-4 transition-all ${
+              className={`ag-cut ag-panel border p-4 transition-all ${
                 isActive
-                  ? 'border-[var(--layout-accent)] bg-[var(--layout-surface-2)] shadow-[0_22px_35px_-24px_var(--layout-accent)]'
+                  ? 'border-[var(--layout-accent)] bg-[var(--layout-surface-2)] shadow-[0_24px_36px_-25px_var(--layout-accent)]'
                   : 'border-[var(--layout-border)] bg-[var(--layout-surface)]'
               }`}
             >
@@ -89,3 +90,4 @@ const TemaLayoutPage = () => {
 };
 
 export default TemaLayoutPage;
+
