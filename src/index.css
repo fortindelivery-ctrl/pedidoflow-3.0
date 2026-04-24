@@ -384,6 +384,21 @@ button {
   text-transform: uppercase;
 }
 
+/* User request: keep labels in tabs/actions with black text for readability. */
+button,
+[role='button'],
+[aria-selected='true'],
+[aria-selected='false'] {
+  color: #000 !important;
+}
+
+button svg,
+[role='button'] svg,
+[aria-selected='true'] svg,
+[aria-selected='false'] svg {
+  color: currentColor !important;
+}
+
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,

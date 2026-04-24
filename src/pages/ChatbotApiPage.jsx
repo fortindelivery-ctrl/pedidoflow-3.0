@@ -925,7 +925,7 @@ const ChatbotApiPage = () => {
                     key={action.key}
                     type="button"
                     onClick={() => handleQuickMessage(action.key)}
-                    className="bg-[var(--layout-surface-2)] text-white hover:bg-[var(--layout-border)]"
+                    className="bg-[var(--layout-surface-2)] text-black hover:bg-[var(--layout-border)]"
                   >
                     <Icon className="mr-2 h-4 w-4 text-[var(--layout-accent)]" />
                     {action.label}
@@ -943,7 +943,7 @@ const ChatbotApiPage = () => {
                   <div
                     className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-6 ${
                       message.role === 'user'
-                        ? 'bg-[var(--layout-accent)] text-white'
+                        ? 'bg-[var(--layout-accent)] text-black'
                         : 'bg-[var(--layout-surface-2)] text-gray-100'
                     }`}
                   >
@@ -963,7 +963,7 @@ const ChatbotApiPage = () => {
               <Button
                 type="button"
                 onClick={() => handleSendMessage()}
-                className="bg-[var(--layout-accent)] text-white hover:bg-[var(--layout-accent-strong)]"
+                className="bg-[var(--layout-accent)] text-black hover:bg-[var(--layout-accent-strong)]"
               >
                 Enviar mensagem
               </Button>
@@ -985,8 +985,8 @@ const ChatbotApiPage = () => {
                   }}
                   className={`${
                     activeEditor === 'bairros'
-                      ? 'bg-[var(--layout-accent)] text-white'
-                      : 'bg-[var(--layout-surface-2)] text-white hover:bg-[var(--layout-border)]'
+                      ? 'bg-[var(--layout-accent)] text-black'
+                      : 'bg-[var(--layout-surface-2)] text-black hover:bg-[var(--layout-border)]'
                   }`}
                 >
                   Taxa de entrega
@@ -999,8 +999,8 @@ const ChatbotApiPage = () => {
                   }}
                   className={`${
                     activeEditor === 'bairros'
-                      ? 'bg-[var(--layout-accent)] text-white'
-                      : 'bg-[var(--layout-surface-2)] text-white hover:bg-[var(--layout-border)]'
+                      ? 'bg-[var(--layout-accent)] text-black'
+                      : 'bg-[var(--layout-surface-2)] text-black hover:bg-[var(--layout-border)]'
                   }`}
                 >
                   Bairros atendidos
@@ -1013,8 +1013,8 @@ const ChatbotApiPage = () => {
                   }}
                   className={`${
                     activeEditor === 'config'
-                      ? 'bg-[var(--layout-accent)] text-white'
-                      : 'bg-[var(--layout-surface-2)] text-white hover:bg-[var(--layout-border)]'
+                      ? 'bg-[var(--layout-accent)] text-black'
+                      : 'bg-[var(--layout-surface-2)] text-black hover:bg-[var(--layout-border)]'
                   }`}
                 >
                   Horario de funcionamento
@@ -1027,8 +1027,8 @@ const ChatbotApiPage = () => {
                   }}
                   className={`${
                     activeEditor === 'config'
-                      ? 'bg-[var(--layout-accent)] text-white'
-                      : 'bg-[var(--layout-surface-2)] text-white hover:bg-[var(--layout-border)]'
+                      ? 'bg-[var(--layout-accent)] text-black'
+                      : 'bg-[var(--layout-surface-2)] text-black hover:bg-[var(--layout-border)]'
                   }`}
                 >
                   Endereco fisico da loja
@@ -1081,14 +1081,14 @@ const ChatbotApiPage = () => {
                     <Button
                       type="button"
                       onClick={handleAddBairro}
-                      className="bg-[var(--layout-surface-2)] text-white hover:bg-[var(--layout-border)]"
+                      className="bg-[var(--layout-surface-2)] text-black hover:bg-[var(--layout-border)]"
                     >
                       Adicionar bairro
                     </Button>
                     <Button
                       type="button"
                       onClick={handleSaveBairros}
-                      className="bg-emerald-500 text-white hover:bg-emerald-400"
+                      className="bg-emerald-500 text-black hover:bg-emerald-400"
                     >
                       {savingBairros ? 'Salvando...' : 'Salvar bairros'}
                     </Button>
@@ -1135,7 +1135,7 @@ const ChatbotApiPage = () => {
                   <Button
                     type="button"
                     onClick={handleSaveConfig}
-                    className="bg-sky-500 text-white hover:bg-sky-400"
+                    className="bg-sky-500 text-black hover:bg-sky-400"
                   >
                     {savingConfig ? 'Salvando...' : 'Salvar configuracoes'}
                   </Button>
@@ -1193,7 +1193,7 @@ const ChatbotApiPage = () => {
               </div>
             ) : null}
             {isMixedContent ? (
-              <div className="text-xs text-amber-300">
+              <div className="text-xs text-black">
                 Seu painel esta em HTTPS e o QR esta em HTTP. O navegador pode bloquear a imagem.
               </div>
             ) : null}
@@ -1201,7 +1201,7 @@ const ChatbotApiPage = () => {
             <Button
               type="button"
               onClick={() => setBotQrNonce(Date.now())}
-              className="bg-[var(--layout-surface-2)] text-white hover:bg-[var(--layout-border)]"
+              className="bg-[var(--layout-surface-2)] text-black hover:bg-[var(--layout-border)]"
             >
               Atualizar QR code
             </Button>
@@ -1209,7 +1209,7 @@ const ChatbotApiPage = () => {
             <Button
               type="button"
               onClick={() => window.open(botQrPageUrl, '_blank', 'noopener,noreferrer')}
-              className="bg-[var(--layout-accent)] text-white hover:bg-[var(--layout-accent-strong)]"
+              className="bg-[var(--layout-accent)] text-black hover:bg-[var(--layout-accent-strong)]"
             >
               Abrir painel do QR
             </Button>
@@ -1224,8 +1224,8 @@ const ChatbotApiPage = () => {
                   onClick={() => handleToggleEditor('bairros')}
                   className={`${
                     activeEditor === 'bairros'
-                      ? 'bg-[var(--layout-accent)] text-white'
-                      : 'bg-emerald-500 text-white hover:bg-emerald-400'
+                      ? 'bg-[var(--layout-accent)] text-black'
+                      : 'bg-emerald-500 text-black hover:bg-emerald-400'
                   }`}
                 >
                   Taxa de entrega
@@ -1235,8 +1235,8 @@ const ChatbotApiPage = () => {
                   onClick={() => handleToggleEditor('bairros')}
                   className={`${
                     activeEditor === 'bairros'
-                      ? 'bg-[var(--layout-accent)] text-white'
-                      : 'bg-emerald-500 text-white hover:bg-emerald-400'
+                      ? 'bg-[var(--layout-accent)] text-black'
+                      : 'bg-emerald-500 text-black hover:bg-emerald-400'
                   }`}
                 >
                   Bairros atendidos
@@ -1246,8 +1246,8 @@ const ChatbotApiPage = () => {
                   onClick={() => handleToggleEditor('config')}
                   className={`${
                     activeEditor === 'config'
-                      ? 'bg-[var(--layout-accent)] text-white'
-                      : 'bg-sky-500 text-white hover:bg-sky-400'
+                      ? 'bg-[var(--layout-accent)] text-black'
+                      : 'bg-sky-500 text-black hover:bg-sky-400'
                   }`}
                 >
                   Horario de funcionamento
@@ -1257,8 +1257,8 @@ const ChatbotApiPage = () => {
                   onClick={() => handleToggleEditor('config')}
                   className={`${
                     activeEditor === 'config'
-                      ? 'bg-[var(--layout-accent)] text-white'
-                      : 'bg-sky-500 text-white hover:bg-sky-400'
+                      ? 'bg-[var(--layout-accent)] text-black'
+                      : 'bg-sky-500 text-black hover:bg-sky-400'
                   }`}
                 >
                   Endereco fisico da loja
@@ -1266,14 +1266,14 @@ const ChatbotApiPage = () => {
                 <Button
                   type="button"
                   onClick={() => handleQuickMessage('atendente')}
-                  className="bg-[var(--layout-surface-2)] text-white hover:bg-[var(--layout-border)]"
+                  className="bg-[var(--layout-surface-2)] text-black hover:bg-[var(--layout-border)]"
                 >
                   Falar com atendente
                 </Button>
                 <Button
                   type="button"
                   onClick={() => handleSyncAll({ includeDrafts: true })}
-                  className="bg-[var(--layout-accent)] text-white hover:bg-[var(--layout-accent-strong)]"
+                  className="bg-[var(--layout-accent)] text-black hover:bg-[var(--layout-accent-strong)]"
                 >
                   Sincronizar tudo
                 </Button>
@@ -1282,7 +1282,7 @@ const ChatbotApiPage = () => {
             <Button
               type="button"
               onClick={() => fetchBotBairros().catch(() => setBotBairrosTotal(null))}
-              className="bg-[var(--layout-surface-2)] text-white hover:bg-[var(--layout-border)]"
+              className="bg-[var(--layout-surface-2)] text-black hover:bg-[var(--layout-border)]"
             >
               Recarregar bairros do bot
             </Button>
@@ -1296,8 +1296,8 @@ const ChatbotApiPage = () => {
                 botOnline === null
                   ? 'text-[var(--layout-text-muted)]'
                   : botOnline
-                    ? 'text-emerald-300'
-                    : 'text-rose-300'
+                    ? 'text-black'
+                    : 'text-black'
               }`}
             >
               {botOnline === null
@@ -1532,14 +1532,14 @@ const ChatbotApiPage = () => {
                 <Button
                   type="button"
                   onClick={handleSaveAi}
-                  className="bg-[var(--layout-accent)] text-white hover:bg-[var(--layout-accent-strong)]"
+                  className="bg-[var(--layout-accent)] text-black hover:bg-[var(--layout-accent-strong)]"
                 >
                   {savingAi ? 'Salvando...' : 'Salvar IA'}
                 </Button>
                 <Button
                   type="button"
                   onClick={handleSyncAiFromDrafts}
-                  className="bg-[var(--layout-surface-2)] text-white hover:bg-[var(--layout-border)]"
+                  className="bg-[var(--layout-surface-2)] text-black hover:bg-[var(--layout-border)]"
                 >
                   Sincronizar IA
                 </Button>
@@ -1557,14 +1557,14 @@ const ChatbotApiPage = () => {
                 <Button
                   type="button"
                   onClick={() => handleSyncCatalogo({ silent: false })}
-                  className="bg-[var(--layout-accent)] text-white hover:bg-[var(--layout-accent-strong)]"
+                  className="bg-[var(--layout-accent)] text-black hover:bg-[var(--layout-accent-strong)]"
                 >
                   Sincronizar catálogo
                 </Button>
                 <Button
                   type="button"
                   onClick={() => fetchBotCatalogo().catch(() => setBotCatalogTotal(null))}
-                  className="bg-[var(--layout-surface-2)] text-white hover:bg-[var(--layout-border)]"
+                  className="bg-[var(--layout-surface-2)] text-black hover:bg-[var(--layout-border)]"
                 >
                   Recarregar catálogo do bot
                 </Button>
@@ -1591,7 +1591,7 @@ const ChatbotApiPage = () => {
                 <Button
                   key={item.key}
                   onClick={() => runAction(item.key, item.action)}
-                  className="justify-start bg-[var(--layout-surface-2)] py-6 text-left text-white hover:bg-[var(--layout-border)]"
+                  className="justify-start bg-[var(--layout-surface-2)] py-6 text-left text-black hover:bg-[var(--layout-border)]"
                 >
                   <Icon className="mr-2 h-4 w-4 text-[var(--layout-accent)]" />
                   {loadingAction === item.key ? 'Executando...' : item.label}
