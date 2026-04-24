@@ -170,6 +170,7 @@ h3,
   font-family: 'Teko', 'Rajdhani', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  text-shadow: none !important;
 }
 
 #root {
@@ -384,27 +385,34 @@ button {
   text-transform: uppercase;
 }
 
-/* User request: keep labels in tabs/actions with black text for readability. */
-button,
-[role='button'],
-[aria-selected='true'],
-[aria-selected='false'] {
-  color: #000 !important;
-}
-
-button svg,
-[role='button'] svg,
-[aria-selected='true'] svg,
-[aria-selected='false'] svg {
-  color: currentColor !important;
-}
-
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--layout-accent) 72%, white 8%);
   outline-offset: 1px;
+}
+
+/* Strong readability for white labels. */
+:is(.text-white, .text-gray-100, .text-\[var\(--layout-text\)\]) {
+  text-shadow:
+    0 0 1px rgba(0, 0, 0, 0.95),
+    1px 0 0 rgba(0, 0, 0, 0.9),
+    -1px 0 0 rgba(0, 0, 0, 0.9),
+    0 1px 0 rgba(0, 0, 0, 0.9),
+    0 -1px 0 rgba(0, 0, 0, 0.9),
+    0 0 10px rgba(0, 0, 0, 0.75),
+    0 0 16px rgba(0, 0, 0, 0.55);
+}
+
+/* Chatbot tab: make clickable options black for better contrast. */
+.chatbot-click-options :is(button, [role='button']) {
+  color: #000 !important;
+  text-shadow: none !important;
+}
+
+.chatbot-click-options :is(button, [role='button']) svg {
+  color: currentColor !important;
 }
 
 input,

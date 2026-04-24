@@ -11,13 +11,13 @@ const buttonVariants = cva(
 				default:
           'border border-[#fff1a6]/30 bg-[linear-gradient(118deg,var(--layout-accent)_0%,#ffe457_100%)] text-[#070707] shadow-[0_18px_36px_-24px_var(--layout-accent)] hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0',
 				destructive:
-          'bg-red-600 text-black hover:-translate-y-0.5 hover:bg-red-500 active:translate-y-0',
+          'bg-red-600 text-white hover:-translate-y-0.5 hover:bg-red-500 active:translate-y-0',
 				outline:
-          'border border-[var(--layout-border)] bg-[var(--layout-surface)] text-black hover:-translate-y-0.5 hover:border-[var(--layout-accent)] hover:bg-[var(--layout-surface-2)] active:translate-y-0',
+          'border border-[var(--layout-border)] bg-[var(--layout-surface)] text-[var(--layout-text)] hover:-translate-y-0.5 hover:border-[var(--layout-accent)] hover:bg-[var(--layout-surface-2)] active:translate-y-0',
 				secondary:
-          'bg-[var(--layout-surface-2)] text-black hover:-translate-y-0.5 hover:bg-[var(--layout-border)] active:translate-y-0',
-				ghost: 'text-black hover:bg-[var(--layout-surface-2)]',
-				link: 'text-black underline-offset-4 hover:underline',
+          'bg-[var(--layout-surface-2)] text-[var(--layout-text)] hover:-translate-y-0.5 hover:bg-[var(--layout-border)] active:translate-y-0',
+				ghost: 'text-[var(--layout-text)] hover:bg-[var(--layout-surface-2)]',
+				link: 'text-[var(--layout-text)] underline-offset-4 hover:underline',
 			},
 			size: {
 				default: 'h-10 px-4 py-2',

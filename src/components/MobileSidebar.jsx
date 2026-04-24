@@ -51,13 +51,13 @@ const MobileSidebar = ({ isOpen, onClose }) => {
                 className={cn(
                   'group ag-cut-sm relative flex items-center gap-3 border px-4 py-3 text-sm font-bold uppercase tracking-[0.1em] transition-all duration-200',
                   isActive
-                    ? 'border-[var(--layout-accent)] bg-[linear-gradient(112deg,var(--layout-accent)_0%,#ffe457_100%)] text-[#0a0a0a] shadow-[0_16px_36px_-22px_var(--layout-accent)]'
-                    : 'border-[var(--layout-border)]/45 text-[var(--layout-text-muted)] hover:-translate-x-0.5 hover:border-[var(--layout-accent)]/65 hover:bg-[var(--layout-surface-2)] hover:text-[var(--layout-text)]',
+                    ? 'border-[var(--layout-accent)] bg-[linear-gradient(112deg,var(--layout-accent)_0%,#ffe457_100%)] text-[#1f2937] [text-shadow:none] shadow-[0_16px_36px_-22px_var(--layout-accent)]'
+                    : 'border-[var(--layout-border)]/45 text-[var(--layout-text)] hover:-translate-x-0.5 hover:border-[var(--layout-accent)]/65 hover:bg-[var(--layout-surface-2)] hover:text-[var(--layout-text)]',
                 )}
               >
                 <Icon className={cn('h-5 w-5 transition-transform group-hover:scale-110', isActive ? 'scale-105' : '')} />
                 <span className="font-medium">{item.label}</span>
-                {isActive ? <div className="absolute right-2 h-2 w-2 animate-pulse bg-[#0a0a0a]" /> : null}
+                {isActive ? <div className="absolute right-2 h-2 w-2 animate-pulse bg-[#1f2937]" /> : null}
               </Link>
             );
           })}
